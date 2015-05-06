@@ -60,7 +60,8 @@ namespace
     // expecting: "n:string" with n == string.size()
     std::string     decode_string( boost::string_ref& stringRef )
     {
-        assert( !stringRef.empty() && '0' <= stringRef.front() && stringRef.front() <= '9' );
+        if ( stringRef.empty() || '0' >= stringRef.front() || stringRef.front() >= '9' )
+            throw std::invalid_argument( "Can't decode string" );
 
         auto colonIndex = stringRef.find_first_of( ':' );
         if ( colonIndex == std::string::npos )
@@ -84,7 +85,8 @@ namespace
     // handle n as a signed 64bit integer is mandatory to handle "large files" aka .torrent for more that 4Gbyte
     long long     decode_naive_integer( boost::string_ref& stringRef )
     {
-        assert( ! stringRef.empty() && stringRef.front() == 'i' );
+        if( stringRef.empty() || stringRef.front() != 'i' )
+            throw std::invalid_argument( "Can't decode integer" );
 
         auto endIndex = stringRef.find_first_of( 'e' );
         if ( endIndex == std::string::npos )
@@ -104,7 +106,9 @@ namespace
     // The initial l and trailing e are beginning and ending delimiters. Lists may contain any bencoded type, including integers, strings, dictionaries, and even lists within other lists.
     std::vector< MetadataValueType > decode_list( boost::string_ref& stringRef )
     {
-        assert( !stringRef.empty() && stringRef.front() == 'l' );
+        if ( stringRef.empty() || stringRef.front() != 'l' )
+            throw std::invalid_argument( "Can't decode list" );
+
         stringRef = stringRef.substr( 1, stringRef.size() - 1 ); // remove 'l'
 
         std::vector< MetadataValueType > result; // TODO: pseudo pre-allocation ?
@@ -115,17 +119,19 @@ namespace
 
     std::unordered_map< std::string, MetadataValueType > decode_dictionary( boost::string_ref& stringRef )
     {
-        assert( !stringRef.empty() && stringRef.front() == 'd' );
+       if( stringRef.empty() || stringRef.front() != 'd' )
+            throw std::invalid_argument( "Can't decode dictionary" );
+            
         stringRef = stringRef.substr( 1, stringRef.size() - 1 ); // remove 'd'
 
         std::unordered_map< std::string, MetadataValueType > result;
         while ( stringRef.front() != 'e' )
         {
-            if ( '0' >= stringRef.front() || stringRef.front() >= '9' )
-                throw std::invalid_argument( "Invalid dictionary key" );
-
             auto key = decode_string( stringRef );
             result[ key ] = decode( stringRef );
+            
+            if ( stringRef.empty() )
+                throw std::invalid_argument( "Missing 'e' after dictionary declaration" );
         }
         return result;
     }
@@ -133,6 +139,9 @@ namespace
     //
     MetadataValueType   decode( boost::string_ref& stringRef )
     {
+        if ( stringRef.empty() )
+            throw std::invalid_argument( "Can't decode empty string" );
+        
         // string are the most frequent
         if ( '0' <= stringRef.front() && stringRef.front() <= '9' )
             return decode_string( stringRef );
