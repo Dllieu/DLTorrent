@@ -13,6 +13,22 @@ namespace parsing
     {
     public:
         static Metadata decode( const std::string& encodedMetadata );
+        static Metadata decode( const char* encodedMetadata, size_t size )
+        {
+            return decode( std::string( encodedMetadata, encodedMetadata + size ) );
+        }
+
+        static Metadata decodeNonBinary( const std::string& encodedMetadata )
+        {
+            return decode( encodedMetadata );
+        }
+
+    private:
+        // Force decode to be called with an explicit type
+        // prevent implicit conversion from const char* -> string :
+        //  - encodedMetadata usually contains non printable character (e.g. can contains several '\0', the implicit copy will stop on the first '\0')
+        template < typename T >
+        static Metadata decode( const T& encodedMetadata );
     };
 }
 
