@@ -12,17 +12,18 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AC6077B8-1E9B-4784-A6B3-8AEA7CD74F5E}</ProjectGuid>
-    <RootNamespace>DLTorrent</RootNamespace>
+    <RootNamespace>Parsing</RootNamespace>
+    <ProjectName>Parsing</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -66,7 +67,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\dltorrent\MetadataValueType.h" />
+    <ClInclude Include="..\..\source\parsing\BDecoder.h" />
+    <ClInclude Include="..\..\source\parsing\BEncoder.h" />
+    <ClInclude Include="..\..\source\parsing\Conversion.h" />
+    <ClInclude Include="..\..\source\parsing\CustomException.h" />
+    <ClInclude Include="..\..\source\parsing\Metadata.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\parsing\BDecoder.cpp" />
+    <ClCompile Include="..\..\source\parsing\BEncoder.cpp" />
+    <ClCompile Include="..\..\source\parsing\Conversion.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
