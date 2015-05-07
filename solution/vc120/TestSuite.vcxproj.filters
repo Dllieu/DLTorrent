@@ -22,5 +22,8 @@
     <ClCompile Include="..\..\source\testsuite\ConversionTestSuite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\testsuite\TrackerTestSuite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

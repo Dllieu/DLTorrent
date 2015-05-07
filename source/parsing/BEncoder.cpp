@@ -29,7 +29,7 @@ namespace
             ss_ << v.size() << ":" << v;
         }
 
-        void    operator()( const std::vector< Metadata >& v ) const
+        void    operator()( const std::vector< MetaInfo >& v ) const
         {
             ss_ << "l";
             for ( const auto& e : v )
@@ -37,7 +37,7 @@ namespace
             ss_ << "e";
         }
 
-        void    operator()( const std::unordered_map< std::string, Metadata >& v ) const
+        void    operator()( const MetaInfoDictionary& v ) const
         {
             ss_ << "d";
             for ( const auto& e : v )
@@ -53,9 +53,9 @@ namespace
     };
 }
 
-/*static*/ std::string  BEncoder::encode( const Metadata& metadata )
+/*static*/ std::string  BEncoder::encode( const MetaInfo& metainfo )
 {
     std::stringstream ss;
-    boost::apply_visitor( EncoderVisitor( ss ), metadata );
+    boost::apply_visitor( EncoderVisitor( ss ), metainfo );
     return ss.str();
 }

@@ -24,10 +24,10 @@ namespace parsing
         std::string error_;\
     }
 
-    CUSTOM_EXCEPTION( invalid_metadata_integer );
-    CUSTOM_EXCEPTION( invalid_metadata_string );
-    CUSTOM_EXCEPTION( invalid_metadata_list );
-    CUSTOM_EXCEPTION( invalid_metadata_dictionary );
+    CUSTOM_EXCEPTION( invalid_metainfo_integer );
+    CUSTOM_EXCEPTION( invalid_metainfo_string );
+    CUSTOM_EXCEPTION( invalid_metainfo_list );
+    CUSTOM_EXCEPTION( invalid_metainfo_dictionary );
 
 #undef CUSTOM_EXCEPTION
 }

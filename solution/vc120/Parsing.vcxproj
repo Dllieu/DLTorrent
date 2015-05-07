@@ -71,12 +71,16 @@
     <ClInclude Include="..\..\source\parsing\BEncoder.h" />
     <ClInclude Include="..\..\source\parsing\Conversion.h" />
     <ClInclude Include="..\..\source\parsing\CustomException.h" />
-    <ClInclude Include="..\..\source\parsing\Metadata.h" />
+    <ClInclude Include="..\..\source\parsing\Metainfo.h" />
+    <ClInclude Include="..\..\source\parsing\RootMetainfo.h" />
+    <ClInclude Include="..\..\source\parsing\TorrentReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\parsing\BDecoder.cpp" />
     <ClCompile Include="..\..\source\parsing\BEncoder.cpp" />
     <ClCompile Include="..\..\source\parsing\Conversion.cpp" />
+    <ClCompile Include="..\..\source\parsing\RootMetainfo.cpp" />
+    <ClCompile Include="..\..\source\parsing\TorrentReader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -5,30 +5,30 @@
 #ifndef __PARSING_BDECODER_H__
 #define __PARSING_BDECODER_H__
 
-#include "Metadata.h"
+#include "MetaInfo.h"
 
 namespace parsing
 {
     class BDecoder
     {
     public:
-        static Metadata decode( const std::string& encodedMetadata );
-        static Metadata decode( const char* encodedMetadata, size_t size )
+        static MetaInfo decode( const std::string& encodedMetaInfo );
+        static MetaInfo decode( const char* encodedMetaInfo, size_t size )
         {
-            return decode( std::string( encodedMetadata, encodedMetadata + size ) );
+            return decode( std::string( encodedMetaInfo, encodedMetaInfo + size ) );
         }
 
-        static Metadata decodeNonBinary( const std::string& encodedMetadata )
+        static MetaInfo decodeNonBinary( const std::string& encodedMetaInfo )
         {
-            return decode( encodedMetadata );
+            return decode( encodedMetaInfo );
         }
 
     private:
         // Force decode to be called with an explicit type
         // prevent implicit conversion from const char* -> string :
-        //  - encodedMetadata usually contains non printable character (e.g. can contains several '\0', the implicit copy will stop on the first '\0')
+        //  - encodedMetaInfo usually contains non printable character (e.g. can contains several '\0', the implicit copy will stop on the first '\0')
         template < typename T >
-        static Metadata decode( const T& encodedMetadata );
+        static MetaInfo decode( const T& encodedMetaInfo );
     };
 }
 

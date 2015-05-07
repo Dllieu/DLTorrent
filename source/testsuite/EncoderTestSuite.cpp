@@ -4,8 +4,6 @@
 //--------------------------------------------------------------------------------
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
-
 #include "parsing/BDecoder.h"
 #include "parsing/BEncoder.h"
 
@@ -28,26 +26,26 @@ BOOST_AUTO_TEST_CASE( EncodeStringTest )
 
 BOOST_AUTO_TEST_CASE( EncodeListTest )
 {
-    std::vector< Metadata > v { 7, 2, "str" };
+    std::vector< MetaInfo > v { 7, 2, "str" };
     BOOST_CHECK( BEncoder::encode( v ) == "li7ei2e3:stre" );
 }
 
 namespace
 {
     // can only test dictionary with 2 keys max
-    bool    encodeDecodeEncodeDecode( const std::string& encodedMetadata )
+    bool    encodeDecodeEncodeDecode( const std::string& encodedMetaInfo )
     {
-        auto firstPass = BEncoder::encode( BDecoder::decode( encodedMetadata ) );
+        auto firstPass = BEncoder::encode( BDecoder::decode( encodedMetaInfo ) );
         auto secondPass = BEncoder::encode( BDecoder::decode( firstPass ) );
 
-        return firstPass == secondPass || secondPass == encodedMetadata || firstPass == encodedMetadata;
+        return firstPass == secondPass || secondPass == encodedMetaInfo || firstPass == encodedMetaInfo;
     }
 }
 
-// Dictionary are implemented with an unordered_map, the key can't always match the one from the encoding metadata (would have the same problem with std::map)
+// Dictionary are implemented with an unordered_map, the key can't always match the one from the encoding MetaInfo (would have the same problem with std::map)
 BOOST_AUTO_TEST_CASE( EncodeDictionaryTest )
 {
-    std::unordered_map< std::string, Metadata > m { { "key", "value" } };
+    MetaInfoDictionary m { { "key", "value" } };
     BOOST_CHECK( BEncoder::encode( m ) == "d3:key5:valuee" );
     BOOST_CHECK( encodeDecodeEncodeDecode( "d3:key5:value3:KEYli5e3:supee" ) );
 }
