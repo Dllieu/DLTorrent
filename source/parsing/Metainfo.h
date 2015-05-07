@@ -14,6 +14,7 @@
 
 namespace parsing
 {
+    // handle binteger as a long long (at least 8 bytes) to handle large files (torrent for more than 4Gbytes)
     using MetaInfo              = boost::make_recursive_variant< long long,
                                                                  std::string,
                                                                  std::vector< boost::recursive_variant_ >,
