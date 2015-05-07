@@ -14,6 +14,7 @@
 
 namespace parsing
 {
+    // handle binteger as a signed 64bit integer is mandatory to handle large files (torrent for more than 4Gbytes)
     using Metadata = boost::make_recursive_variant< long long,
                                                     std::string,
                                                     std::vector< boost::recursive_variant_ >,
