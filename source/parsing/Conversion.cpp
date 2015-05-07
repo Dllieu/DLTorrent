@@ -6,13 +6,16 @@
 
 #include "Conversion.h"
 
+#define FORMAT_EXCEPTION_MESSAGE( MESSAGE ) \
+    std::string( __FUNCTION__ ) + "with " + std::string( MESSAGE )
+
 unsigned int    parsing::naive_uint_conversion( const boost::string_ref& stringRef )
 {
     unsigned int result = 0;
     for ( auto c : stringRef )
     {
         if ( c < '0' || c > '9' )
-            throw std::invalid_argument( std::string( __FUNCTION__ ) + "with " + std::string( stringRef ) );
+            throw std::invalid_argument( FORMAT_EXCEPTION_MESSAGE( stringRef ) );
 
         result = result * 10 + c - '0';
     }
@@ -36,12 +39,14 @@ long long   parsing::naive_ll_conversion( const boost::string_ref& stringRef )
 
         finishReadSign = true;
         if ( c < '0' || c > '9' )
-            throw std::invalid_argument( std::string( __FUNCTION__ ) + "with " + std::string( stringRef ) );
+            throw std::invalid_argument( FORMAT_EXCEPTION_MESSAGE( stringRef ) );
 
         result = result * 10 + c - '0';
     }
     if ( !finishReadSign )
-        throw std::invalid_argument( std::string( __FUNCTION__ ) + "with " + std::string( stringRef ) );
+        throw std::invalid_argument( FORMAT_EXCEPTION_MESSAGE( stringRef ) );
 
     return ( isNegative ? -1 : 1 ) * result;
 }
+
+#undef FORMAT_EXCEPTION_MESSAGE
