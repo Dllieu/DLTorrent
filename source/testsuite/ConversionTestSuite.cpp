@@ -4,9 +4,9 @@
 //--------------------------------------------------------------------------------
 #include <boost/test/unit_test.hpp>
 
-#include "parsing/Conversion.h"
+#include "utility/Conversion.h"
 
-using namespace parsing;
+using namespace utility;
 
 BOOST_AUTO_TEST_SUITE( ConversionTestSuite )
 

@@ -7,7 +7,7 @@
 
 #include <exception>
 
-namespace parsing
+namespace utility
 {
 
 #define CUSTOM_EXCEPTION( EXCEPTION_NAME )\

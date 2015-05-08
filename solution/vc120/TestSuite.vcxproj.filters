@@ -8,6 +8,9 @@
     <Filter Include="Source Files\Intern">
       <UniqueIdentifier>{0d9cb93f-68ad-4cb2-9449-0cb463d141fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\UtilityTests">
+      <UniqueIdentifier>{8fd12912-ceae-4e94-b28b-c7957f346f59}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\testsuite\Initializer.cpp">
@@ -19,11 +22,14 @@
     <ClCompile Include="..\..\source\testsuite\EncoderTestSuite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\testsuite\ConversionTestSuite.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\testsuite\TrackerTestSuite.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\testsuite\ConversionTestSuite.cpp">
+      <Filter>Source Files\UtilityTests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\testsuite\GenericBufferTestSuite.cpp">
+      <Filter>Source Files\UtilityTests</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

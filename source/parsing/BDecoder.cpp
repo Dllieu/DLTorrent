@@ -5,8 +5,8 @@
 #include <boost/utility/string_ref.hpp>
 
 #include "BDecoder.h"
-#include "CustomException.h"
-#include "Conversion.h"
+#include "utility/Conversion.h"
+#include "utility/CustomException.h"
 
 using namespace parsing;
 
@@ -31,16 +31,16 @@ namespace
     long long     bdecode_naive_integer( boost::string_ref& stringRef )
     {
         if ( stringRef.empty() || stringRef.front() != 'i' )
-            throw invalid_metainfo_integer( "Can't decode" );
+            throw utility::invalid_metainfo_integer( "Can't decode" );
 
         auto endIndex = stringRef.find_first_of( 'e' );
         if ( endIndex == std::string::npos )
-            throw invalid_metainfo_integer( "Missing 'e'" );
+            throw utility::invalid_metainfo_integer( "Missing 'e'" );
 
         if ( endIndex == 1 )
-            throw invalid_metainfo_integer( "Empty integer" );
+            throw utility::invalid_metainfo_integer( "Empty integer" );
 
-        auto result = naive_ll_conversion( stringRef.substr( 1, endIndex - 1 ) );
+        auto result = utility::naive_ll_conversion( stringRef.substr( 1, endIndex - 1 ) );
         stringRef = stringRef.substr( endIndex + 1, stringRef.size() - endIndex - 1 );
         return result;
     }
@@ -49,17 +49,17 @@ namespace
     std::string     bdecode_string( boost::string_ref& stringRef )
     {
         if ( stringRef.empty() || '0' > stringRef.front() || stringRef.front() > '9' )
-            throw invalid_metainfo_string( "Can't decode" );
+            throw utility::invalid_metainfo_string( "Can't decode" );
 
         auto colonIndex = stringRef.find_first_of( ':' );
         if ( colonIndex == std::string::npos )
-            throw invalid_metainfo_string( "Missing ':'" );
+            throw utility::invalid_metainfo_string( "Missing ':'" );
 
-        auto sizeString = naive_uint_conversion( stringRef.substr( 0, colonIndex ) );
+        auto sizeString = utility::naive_uint_conversion( stringRef.substr( 0, colonIndex ) );
 
-        auto i = size_t( colonIndex + 1 );
+        auto i = static_cast< size_t >( colonIndex + 1 );
         if ( i + sizeString > stringRef.size() )
-            throw invalid_metainfo_string( "Out of bound" );
+            throw utility::invalid_metainfo_string( "Out of bound" );
 
         auto result = std::string( stringRef.substr( i, sizeString ) );
         i += sizeString;
@@ -72,7 +72,7 @@ namespace
     std::vector< MetaInfo > bdecode_list( boost::string_ref& stringRef )
     {
         if ( stringRef.empty() || stringRef.front() != 'l' )
-            throw invalid_metainfo_list( "Can't decode" );
+            throw utility::invalid_metainfo_list( "Can't decode" );
 
         stringRef = stringRef.substr( 1, stringRef.size() - 1 ); // remove 'l'
 
@@ -87,7 +87,7 @@ namespace
     MetaInfoDictionary bdecode_dictionary( boost::string_ref& stringRef )
     {
         if ( stringRef.empty() || stringRef.front() != 'd' )
-            throw invalid_metainfo_dictionary( "Can't decode" );
+            throw utility::invalid_metainfo_dictionary( "Can't decode" );
 
         stringRef = stringRef.substr( 1, stringRef.size() - 1 ); // remove 'd'
 
@@ -98,7 +98,7 @@ namespace
             result[ key ] = bdecode( stringRef );
 
             if ( stringRef.empty() )
-                throw invalid_metainfo_list( "Missing 'e'" );
+                throw utility::invalid_metainfo_list( "Missing 'e'" );
         }
 
         stringRef = stringRef.substr( 1, stringRef.size() - 1 ); // remove 'e'

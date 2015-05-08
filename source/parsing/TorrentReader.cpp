@@ -22,7 +22,7 @@ using namespace parsing;
 
     bfs::ifstream   stream( torrent, std::ios_base::in | std::ios_base::binary );
     stream.seekg( 0, std::ios::end );
-    auto bytesToRead = size_t( stream.tellg() );
+    auto bytesToRead = static_cast< size_t >( stream.tellg() );
 
     std::string encodedMetaInfo;
     // use resize instead of reserve as the way we populate 'encodedMetaInfo' won't change it's size

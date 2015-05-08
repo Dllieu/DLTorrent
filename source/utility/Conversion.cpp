@@ -9,7 +9,7 @@
 #define FORMAT_EXCEPTION_MESSAGE( MESSAGE ) \
     std::string( __FUNCTION__ ) + "with " + std::string( MESSAGE )
 
-unsigned int    parsing::naive_uint_conversion( const boost::string_ref& stringRef )
+unsigned int    utility::naive_uint_conversion( const boost::string_ref& stringRef )
 {
     unsigned int result = 0;
     for ( auto c : stringRef )
@@ -22,7 +22,7 @@ unsigned int    parsing::naive_uint_conversion( const boost::string_ref& stringR
     return result;
 }
 
-long long   parsing::naive_ll_conversion( const boost::string_ref& stringRef )
+long long   utility::naive_ll_conversion( const boost::string_ref& stringRef )
 {
     auto finishReadSign = false;
     auto isNegative = false;

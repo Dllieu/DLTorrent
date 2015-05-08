@@ -7,7 +7,7 @@
 
 #include <boost/utility/string_ref.hpp>
 
-namespace parsing
+namespace utility
 {
     // cheap str_to_numeric as bencoding numeric are easy to parse (no exponential, only power of 10, no digit separator, etc...)
     unsigned int    naive_uint_conversion( const boost::string_ref& stringRef );
