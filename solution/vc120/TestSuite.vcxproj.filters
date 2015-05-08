@@ -28,7 +28,7 @@
     <ClCompile Include="..\..\source\testsuite\ConversionTestSuite.cpp">
       <Filter>Source Files\UtilityTests</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\testsuite\GenericBufferTestSuite.cpp">
+    <ClCompile Include="..\..\source\testsuite\GenericBigEndianBufferTestSuite.cpp">
       <Filter>Source Files\UtilityTests</Filter>
     </ClCompile>
   </ItemGroup>

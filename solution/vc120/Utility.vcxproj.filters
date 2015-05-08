@@ -18,13 +18,13 @@
     <ClInclude Include="..\..\source\utility\CustomException.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\utility\GenericBuffer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\utility\RandomGenerator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\utility\ThreadSafeSingleton.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\utility\GenericBigEndianBuffer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

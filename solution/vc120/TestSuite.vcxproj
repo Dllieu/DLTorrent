@@ -81,7 +81,7 @@
     <ClCompile Include="..\..\source\testsuite\ConversionTestSuite.cpp" />
     <ClCompile Include="..\..\source\testsuite\DecoderTestSuite.cpp" />
     <ClCompile Include="..\..\source\testsuite\EncoderTestSuite.cpp" />
-    <ClCompile Include="..\..\source\testsuite\GenericBufferTestSuite.cpp" />
+    <ClCompile Include="..\..\source\testsuite\GenericBigEndianBufferTestSuite.cpp" />
     <ClCompile Include="..\..\source\testsuite\Initializer.cpp" />
     <ClCompile Include="..\..\source\testsuite\TrackerTestSuite.cpp" />
   </ItemGroup>
