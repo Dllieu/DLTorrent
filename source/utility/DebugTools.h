@@ -13,7 +13,7 @@ namespace utility
     std::string     generate_wireshark_filter( const std::vector< boost::asio::ip::udp::endpoint >& endpoints );
 
     template < typename T >
+    class TypeDisplayer; // Do not define this template : will raise a compilation error stating the type T
 }
 
 #endif // ! __UTILITY_DEBUGTOOLS_H__
-
