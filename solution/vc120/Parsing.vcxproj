@@ -76,6 +76,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\source\parsing\BDecoder.cpp" />
     <ClCompile Include="..\..\source\parsing\BEncoder.cpp" />
+    <ClCompile Include="..\..\source\parsing\MetaInfo.cpp" />
     <ClCompile Include="..\..\source\parsing\RootMetainfo.cpp" />
     <ClCompile Include="..\..\source\parsing\TorrentReader.cpp" />
   </ItemGroup>

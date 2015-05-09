@@ -12,12 +12,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\utility\Conversion.cpp" />
+    <ClCompile Include="..\..\source\utility\Sha1Encoder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\utility\Conversion.h" />
     <ClInclude Include="..\..\source\utility\CustomException.h" />
     <ClInclude Include="..\..\source\utility\GenericBigEndianBuffer.h" />
     <ClInclude Include="..\..\source\utility\RandomGenerator.h" />
+    <ClInclude Include="..\..\source\utility\Sha1Encoder.h" />
     <ClInclude Include="..\..\source\utility\ThreadSafeSingleton.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

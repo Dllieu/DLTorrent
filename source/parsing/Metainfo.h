@@ -6,7 +6,7 @@
 #define __PARSING_METAINFO_H__
 
 #define BOOST_VARIANT_NO_FULL_RECURSIVE_VARIANT_SUPPORT
-#include <boost/variant.hpp>
+    #include <boost/variant.hpp>
 #undef BOOST_VARIANT_NO_FULL_RECURSIVE_VARIANT_SUPPORT
 
 #include <unordered_map>
@@ -23,5 +23,8 @@ namespace parsing
     using MetaInfoList          = std::vector< MetaInfo >;
     using MetaInfoDictionary    = std::unordered_map< std::string, MetaInfo >;
 }
+
+// Debug utils
+std::ostream&   operator<<( std::ostream& os, const parsing::MetaInfo& metaInfo );
 
 #endif // ! __PARSING_METAINFO_H__

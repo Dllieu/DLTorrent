@@ -2,8 +2,8 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __PARSING_GENERICBIGENDIANBUFFER_H__
-#define __PARSING_GENERICBIGENDIANBUFFER_H__
+#ifndef __UTILITY_GENERICBIGENDIANBUFFER_H__
+#define __UTILITY_GENERICBIGENDIANBUFFER_H__
 
 #include <boost/endian/conversion.hpp>
 #include <array>
@@ -34,6 +34,11 @@ namespace utility
             return buffer_.data();
         }
 
+        bool        empty() const
+        {
+            return writeIndex_ == 0;
+        }
+
         size_t      size() const
         {
             return writeIndex_;
@@ -41,6 +46,9 @@ namespace utility
 
         void    clear()
         {
+            if ( empty() )
+                return;
+
             buffer_.fill( 0 );
             clearIndex();
         }
@@ -66,6 +74,23 @@ namespace utility
             return *this;
         }
 
+        template < typename T, size_t N >
+        void    writeArray( const std::array< T, N >& a )
+        {
+            for ( auto i = 0; i < a.size(); ++i )
+                operator<<( a[ i ] );
+        }
+
+        void    writeString( const std::string& s, size_t sizeToWrite )
+        {
+            auto i = static_cast< size_t >( 0 );
+            for ( ; i < sizeToWrite && i < s.size(); ++i )
+                operator<<( s[ i ] );
+
+            for ( ; i < sizeToWrite; ++i )
+                operator<< < unsigned char >( 0 );
+        }
+
         template < typename T >
         GenericBigEndianBuffer< N >&  operator>>( T& t )
         {
@@ -85,6 +110,21 @@ namespace utility
         {
             b = read< bool >();
             return *this;
+        }
+
+        void     readString( std::string& s, size_t sizeToRead )
+        {
+            s.resize( sizeToRead );
+
+            auto lastNonTerminationChar = static_cast< size_t >( 0 );
+            for ( auto i = 0; i < sizeToRead; ++i )
+            {
+                operator>>( s[ i ] );
+                if ( s[ i ] != 0 )
+                    lastNonTerminationChar = i;
+            }
+
+            s.resize( lastNonTerminationChar + 1 ); // + \0
         }
 
     private:
@@ -128,4 +168,4 @@ namespace utility
     };
 }
 
-#endif // ! __PARSING_GENERICBIGENDIANBUFFER_H__
+#endif // ! __UTILITY_GENERICBIGENDIANBUFFER_H__

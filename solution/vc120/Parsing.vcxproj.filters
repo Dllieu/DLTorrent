@@ -36,5 +36,8 @@
     <ClCompile Include="..\..\source\parsing\RootMetainfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\parsing\MetaInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

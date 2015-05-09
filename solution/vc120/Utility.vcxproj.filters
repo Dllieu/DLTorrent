@@ -10,6 +10,9 @@
     <ClCompile Include="..\..\source\utility\Conversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\utility\Sha1Encoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\utility\Conversion.h">
@@ -25,6 +28,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\utility\GenericBigEndianBuffer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\utility\Sha1Encoder.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
