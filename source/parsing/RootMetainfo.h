@@ -5,13 +5,19 @@
 #ifndef __PARSING_ROOTMETAINFODICTIONARY_H__
 #define __PARSING_ROOTMETAINFODICTIONARY_H__
 
+#include <boost/asio/ip/udp.hpp>
+
 #include "MetaInfo.h"
+
+namespace bai = boost::asio::ip;
 
 namespace parsing
 {
     class RootMetaInfo
     {
     public:
+        const std::vector< bai::udp::endpoint >&    getAnnouncers() const;
+
         RootMetaInfo( const RootMetaInfo& ) = delete;
         RootMetaInfo& operator=( const RootMetaInfo& ) = delete;
 
@@ -20,7 +26,8 @@ namespace parsing
         explicit RootMetaInfo( MetaInfoDictionary&& root );
 
     public:
-        MetaInfoDictionary    root_;
+        MetaInfoDictionary                  root_;
+        std::vector< bai::udp::endpoint >   announcers_;
     };
 }
 

@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE( EncodeListTest )
 namespace
 {
     // can only test dictionary with 2 keys max
-    bool    encodeDecodeEncodeDecode( const std::string& encodedMetaInfo )
+    bool    encode_decode_encode_decode( const std::string& encodedMetaInfo )
     {
         auto firstPass = BEncoder::encode( BDecoder::decode( encodedMetaInfo ) );
         auto secondPass = BEncoder::encode( BDecoder::decode( firstPass ) );
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE( EncodeDictionaryTest )
 {
     MetaInfoDictionary m { { "key", "value" } };
     BOOST_CHECK( BEncoder::encode( m ) == "d3:key5:valuee" );
-    BOOST_CHECK( encodeDecodeEncodeDecode( "d3:key5:value3:KEYli5e3:supee" ) );
+    BOOST_CHECK( encode_decode_encode_decode( "d3:key5:value3:KEYli5e3:supee" ) );
 }
 
 BOOST_AUTO_TEST_SUITE_END() // ! EncoderTestSuite

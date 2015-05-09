@@ -22,16 +22,9 @@ namespace utility
             , readIndex_( 0 )
         {}
 
-        const char*    getDataForReading() const
+        size_t  capacity() const
         {
-            return buffer_.data();
-        }
-
-        char*           getDataForWriting( size_t dataToBeWritten )
-        {
-            clearIndex();
-            writeIndex_ = dataToBeWritten;
-            return buffer_.data();
+            return N;
         }
 
         bool        empty() const
@@ -51,6 +44,25 @@ namespace utility
 
             buffer_.fill( 0 );
             clearIndex();
+        }
+
+        const char*    getDataForReading() const
+        {
+            return buffer_.data();
+        }
+
+        // should always be called with updateDataWritten
+        char*           getDataForWriting()
+        {
+            clearIndex();
+            writeIndex_ = 0; // to be updated by updateDataWritten
+            return buffer_.data();
+        }
+
+        // very ugly
+        void            updateDataWritten( size_t dataWritten )
+        {
+            writeIndex_ = dataWritten;
         }
 
         template < typename T >

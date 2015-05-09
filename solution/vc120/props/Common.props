@@ -12,6 +12,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\..\source\;$(ProjectDir)\..\..\dependencies\boost;$(ProjectDir)\..\..\dependencies\</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

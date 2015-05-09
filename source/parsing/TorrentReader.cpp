@@ -35,5 +35,6 @@ using namespace parsing;
         throw bfs::filesystem_error( "Couldn't read all the data", torrent, boost::system::error_code() );
 
     auto root = boost::get< MetaInfoDictionary >( BDecoder::decode( encodedMetaInfo ) );
+    // TODO : check all the required sub nodes to ensure the torrent is not ill-formed
     return RootMetaInfo( std::move( root ) );
 }

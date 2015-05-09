@@ -12,7 +12,7 @@ using namespace parsing;
 
 namespace
 {
-    std::ostream&    applyPadding( std::ostream& os, size_t padding )
+    std::ostream&    apply_padding( std::ostream& os, size_t padding )
     {
         std::fill_n( std::ostream_iterator< char >( os ), padding, '-' );
         if ( padding > 0 )
@@ -32,15 +32,15 @@ namespace
 
         void    operator()( long long v ) const
         {
-            applyPadding( os_, padding_ ) << v << std::endl;
+            apply_padding( os_, padding_ ) << v << std::endl;
         }
 
         void    operator()( const std::string& v ) const
         {
             if ( std::find_if( v.begin(), v.end(), [] ( unsigned char c ) { return ! isprint( c ); } ) != v.end() )
-                applyPadding( os_, padding_ ) << "(binary...)" << std::endl;
+                apply_padding( os_, padding_ ) << "(binary...)" << std::endl;
             else
-                applyPadding( os_, padding_ ) << v << std::endl;
+                apply_padding( os_, padding_ ) << v << std::endl;
         }
 
         void    operator()( const std::vector< MetaInfo >& v ) const
