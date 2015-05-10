@@ -9,13 +9,13 @@
 #include <fstream>
 
 #include "TorrentReader.h"
-#include "RootMetaInfo.h"
+#include "Tracker.h"
 #include "BDecoder.h"
 
 namespace bfs = boost::filesystem;
 using namespace parsing;
 
-/*static*/ RootMetaInfo   TorrentReader::read( const bfs::path& torrent )
+/*static*/ Tracker   TorrentReader::read( const bfs::path& torrent )
 {
     if ( ! bfs::exists( torrent ) )
         throw bfs::filesystem_error( "Invalid torrent", torrent, boost::system::error_code() );
@@ -35,6 +35,5 @@ using namespace parsing;
         throw bfs::filesystem_error( "Couldn't read all the data", torrent, boost::system::error_code() );
 
     auto root = boost::get< MetaInfoDictionary >( BDecoder::decode( encodedMetaInfo ) );
-    // TODO : check all the required sub nodes to ensure the torrent is not ill-formed
-    return RootMetaInfo( std::move( root ) );
+    return Tracker( RootMetaInfo( std::move( root ) ) );
 }

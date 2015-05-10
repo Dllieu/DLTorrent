@@ -27,7 +27,7 @@ namespace utility
 
     private:
         mutable std::default_random_engine      randomEngine_;
-        std::uniform_int_distribution< T >    uniformIntDistribution_;
+        std::uniform_int_distribution< T >      uniformIntDistribution_;
 
         static_assert( std::is_integral< T >::value, "Incompatible type for RandomGenerator" );
     };

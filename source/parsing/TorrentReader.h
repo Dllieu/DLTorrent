@@ -11,12 +11,12 @@
 
 namespace parsing
 {
-    class RootMetaInfo;
+    class Tracker;
 
     class TorrentReader
     {
     public:
-        static RootMetaInfo   read( const boost::filesystem::path& filepath );
+        static Tracker   read( const boost::filesystem::path& filepath );
     };
 }
 

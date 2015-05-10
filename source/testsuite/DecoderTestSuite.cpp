@@ -14,12 +14,12 @@ BOOST_AUTO_TEST_CASE( DecodeStringTest )
 {
     BOOST_CHECK_THROW( BDecoder::decodeNonBinary( "6:salut" ), std::exception );
 
-    BOOST_CHECK( boost::get< std::string >( BDecoder::decodeNonBinary( "5:salut" ) ) == "salut" );
-    BOOST_CHECK( boost::get< std::string >( BDecoder::decodeNonBinary( "0:" ) ) == "" );
+    BOOST_CHECK( boost::get< MetaInfoString >( BDecoder::decodeNonBinary( "5:salut" ) ) == "salut" );
+    BOOST_CHECK( boost::get< MetaInfoString >( BDecoder::decodeNonBinary( "0:" ) ) == "" );
 
     const char s[] = "4:\012\0";
     std::string MetaInfoWithBinary( s, s + 6 );
-    auto resultBinary = boost::get< std::string >( BDecoder::decode( MetaInfoWithBinary ) );
+    auto resultBinary = boost::get< MetaInfoString >( BDecoder::decode( MetaInfoWithBinary ) );
     BOOST_CHECK( resultBinary.size() == 4 );
 }
 
@@ -28,8 +28,8 @@ BOOST_AUTO_TEST_CASE( DecodeIntegerTest )
     BOOST_CHECK_THROW( BDecoder::decodeNonBinary( "ie" ), std::exception );
     BOOST_CHECK_THROW( BDecoder::decodeNonBinary( "i" ), std::exception );
 
-    BOOST_CHECK( boost::get< long long >( BDecoder::decodeNonBinary( "i5e" ) ) == 5 );
-    BOOST_CHECK( boost::get< long long >( BDecoder::decodeNonBinary( "i-5e" ) ) == -5 );
+    BOOST_CHECK( boost::get< MetaInfoInteger >( BDecoder::decodeNonBinary( "i5e" ) ) == 5 );
+    BOOST_CHECK( boost::get< MetaInfoInteger >( BDecoder::decodeNonBinary( "i-5e" ) ) == -5 );
 }
 
 BOOST_AUTO_TEST_CASE( DecodeListTest )

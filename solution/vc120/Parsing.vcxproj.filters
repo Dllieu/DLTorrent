@@ -5,39 +5,48 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Source Files\Parsing">
+      <UniqueIdentifier>{b0b75c26-958a-426a-a0e7-52a797f2ad9b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\parsing\BDecoder.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\parsing\BEncoder.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\parsing\Metainfo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\parsing\TorrentReader.h">
+    <ClInclude Include="..\..\source\parsing\Tracker.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\parsing\RootMetainfo.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="..\..\source\parsing\BDecoder.h">
+      <Filter>Source Files\Parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\parsing\BEncoder.h">
+      <Filter>Source Files\Parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\parsing\TorrentReader.h">
+      <Filter>Source Files\Parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\parsing\RootMetaInfo.h">
+      <Filter>Source Files\Parsing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\parsing\BDecoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\parsing\BEncoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\parsing\TorrentReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\parsing\RootMetainfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\parsing\MetaInfo.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\parsing\Tracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\parsing\BDecoder.cpp">
+      <Filter>Source Files\Parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\parsing\BEncoder.cpp">
+      <Filter>Source Files\Parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\parsing\TorrentReader.cpp">
+      <Filter>Source Files\Parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\parsing\RootMetaInfo.cpp">
+      <Filter>Source Files\Parsing</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

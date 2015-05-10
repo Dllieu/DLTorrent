@@ -3,22 +3,22 @@
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
 #include <boost/algorithm/string/predicate.hpp>
+#include <iostream>
 
-#include "RootMetaInfo.h"
-#include "BEncoder.h"
 #include "utility/Sha1Encoder.h"
+#include "BEncoder.h"
+#include "RootMetaInfo.h"
 
 using namespace parsing;
-namespace bai = boost::asio::ip;
 
 namespace
 {
     // TODO: use regexp and handle more formatting ? (do that once html is handled)
-    void   push_udp_endpoint( std::vector< bai::udp::endpoint >& endpoints, const std::string& url )
+    void   push_udp_endpoint( std::vector< bai::udp::endpoint >& endpoints, const std::string& url, boost::asio::io_service& ioService )
     {
         static std::string expectedToStartWith( "udp://" );
 
-        if ( ! boost::starts_with( url, expectedToStartWith ) )
+        if ( !boost::starts_with( url, expectedToStartWith ) )
             return;
 
         auto from = expectedToStartWith.size();
@@ -34,10 +34,8 @@ namespace
 
         auto port = url.substr( from, to - from );
 
-        // TODO : PUT SOMEWHERE ELSE WHICH MAKE MORE SENSE
-        boost::asio::io_service io_service;
         bai::udp::resolver::query query( bai::udp::v4(), hostname, port );
-        bai::udp::resolver resolver( io_service );
+        bai::udp::resolver resolver( ioService );
 
         try
         {
@@ -45,43 +43,49 @@ namespace
             for ( auto it = resolver.resolve( query ); it != end; ++it )
                 endpoints.emplace_back( bai::udp::endpoint( *it ) );
         }
-        catch (...)
+        catch ( ... )
         {
             // Log -> hostname / port : unreachable
         }
     }
 
-    // todo handle HTTP
-    std::vector< bai::udp::endpoint >   parse_endpoint_from_root_metainfo( const MetaInfoDictionary& root )
+    std::vector< bai::udp::endpoint >   parse_endpoints_from_root_metainfo( const MetaInfoList& announceList )
     {
-        std::vector< bai::udp::endpoint > result;
+        boost::asio::io_service ioService;
 
-        const auto& announceList = boost::get< MetaInfoList >( root.at( "announce-list" ) );
+        std::vector< bai::udp::endpoint > result;
         for ( const auto& subAnnounceList : announceList )
         {
             const auto& urlList = boost::get< MetaInfoList >( subAnnounceList );
             for ( const auto& url : urlList )
-                push_udp_endpoint( result, boost::get< std::string >( url ) );
+                push_udp_endpoint( result, boost::get< MetaInfoString >( url ), ioService );
         }
+        return result;
+    }
 
+    uint64_t      parse_total_length( const MetaInfoDictionary& dataChunk )
+    {
+        auto result = static_cast< uint64_t >( 0 );
+        const auto& files = boost::get< MetaInfoList >( dataChunk.at( "files" ) );
+        for ( const auto& fileInformationMetaInfo : files )
+        {
+            const auto& fileInformation = boost::get< MetaInfoDictionary >( fileInformationMetaInfo );
+            result += boost::get< MetaInfoInteger >( fileInformation.at( "length" ) );
+        }
         return result;
     }
 }
 
 RootMetaInfo::RootMetaInfo( MetaInfoDictionary&& root )
     : root_( root )
-    , announcers_( parse_endpoint_from_root_metainfo( root_ ) )
-    , hashInfo_( utility::Sha1Encoder::instance().encode( BEncoder::encode( root_[ "info" ] ) ) )
+    , announcers_( parse_endpoints_from_root_metainfo( boost::get< MetaInfoList >( root_.at( "announce-list" ) ) ) )
+    , hashInfo_( utility::Sha1Encoder::instance().encode( BEncoder::encode( root_.at( "info" ) ) ) )
+    , bytesToDownload_( parse_total_length( boost::get< MetaInfoDictionary >( root_.at( "info" ) ) ) )
 {
     // NOTHING
 }
 
-const std::vector< bai::udp::endpoint >&    RootMetaInfo::getAnnouncers() const
+void    RootMetaInfo::display() const
 {
-    return announcers_;
-}
-
-const std::array< char, 20 >&               RootMetaInfo::getHashInfo() const
-{
-    return hashInfo_;
+    std::cout << root_ << std::endl;
 }
