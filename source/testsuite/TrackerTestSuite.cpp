@@ -24,45 +24,6 @@ using namespace boost::asio::ip;
 
 BOOST_AUTO_TEST_SUITE( TrackerTestSuite )
 
-namespace
-{
-    boost::asio::io_service io_service; // test
-
-    void   addUdpEndpoint( std::vector< udp::endpoint >& endpoints, const std::string& s )
-    {
-        boost::string_ref stringRef( s );
-
-        auto pos = stringRef.find( "udp://" );
-        if ( pos == std::string::npos )
-            return;
-
-        stringRef = stringRef.substr( pos + 6 /*ugly*/, stringRef.size() );
-        pos = stringRef.find( ':' );
-        if ( pos == std::string::npos )
-            return;
-
-        //***
-        auto hostname = std::string( stringRef.substr( 0, pos ) );
-        //***
-
-        stringRef = stringRef.substr( pos + 1, stringRef.size() );
-        pos = stringRef.find( '/' );
-        if ( pos == std::string::npos )
-            return;
-
-        //***
-        auto port = std::string( stringRef.substr( 0, pos ) );
-        //***
-
-        udp::resolver resolver( io_service );
-        udp::resolver::query query( udp::v4(), hostname, port );
-
-        udp::resolver::iterator end;
-        for ( auto it = resolver.resolve( query ); it != end; ++it )
-            endpoints.emplace_back( udp::endpoint( *it ) );
-    }
-}
-
 // recup https://github.com/rakshasa/libtorrent/blob/99e33c005a04c329c32b8bf26c48bd15725dfffd/src/net/protocol_buffer.h
 // set baser sur l'implem https://github.com/rakshasa/libtorrent/blob/99e33c005a04c329c32b8bf26c48bd15725dfffd/src/tracker/tracker_udp.cc
 // https://github.com/rakshasa/libtorrent/tree/master/src/tracker
@@ -78,49 +39,23 @@ namespace
 BOOST_AUTO_TEST_CASE( TrackerTest )
 {
     auto rootMetaInfo = TorrentReader::read( "E:\\Downloads\\example.torrent" );
-    //auto rootMetaInfo = TorrentReader::read( "E:\\Downloads\\hashinfo_c9c6645661a6a7311c0aa5e2e22d7f70a58e12e7.torrent" );
+    std::vector< udp::endpoint > endpoints = rootMetaInfo.getAnnouncers();
 
-    //std::cout << rootMetaInfo.root_ << std::endl;
-
-    std::vector< udp::endpoint > endpoints;
-    auto announceList = boost::get< MetaInfoList >( rootMetaInfo.root_[ "announce-list" ] );
-
-    try
-    {
-        addUdpEndpoint( endpoints, boost::get< std::string >( rootMetaInfo.root_[ "announce" ] ) );
-    }
-    catch (...)
-    {
-    }
-    for ( const auto& metaInfo : announceList )
-    {
-        auto urlList = boost::get< MetaInfoList >( metaInfo );
-        for ( const auto& url : urlList )
-        {
-            try
-            {
-                addUdpEndpoint( endpoints, boost::get< std::string >( url ) );
-            }
-            catch (...)
-            {
-            }
-        }
-    }
-
-
-    std::cout << "************" << std::endl;
-
+    // DEBUG Utils
     std::string wiresharkFilter = utility::generate_wireshark_filter( endpoints );
-    utility::GenericBigEndianBuffer< 2048 > buffer;
-    
+    //std::cout << rootMetaInfo.root_ << std::endl;
+    // ! DEBUG Utils
+
     // Ref for receive_from
     for ( auto& endpoint : endpoints )
     {
         if (endpoint.address().to_string() != "185.37.101.229")
             continue;
 
+        utility::GenericBigEndianBuffer< 2048 > buffer;
         std::cout << "> endpoint used: " << endpoint << std::endl;
 
+        boost::asio::io_service io_service;
         udp::socket socket( io_service );
         socket.open( udp::v4() );
         socket.connect( endpoint );
@@ -168,8 +103,7 @@ BOOST_AUTO_TEST_CASE( TrackerTest )
         action = 1;
         buffer << connectionId << action << transactionId;
 
-        std::string toEncode = BEncoder::encode( rootMetaInfo.root_[ "info" ] );
-        auto info_hash = utility::Sha1Encoder::instance().encode( toEncode );
+        const auto& info_hash = rootMetaInfo.getHashInfo();
         std::cout << "SHA1: " << utility::sha1_to_string( info_hash ) << std::endl;
 
         buffer.writeArray( info_hash );

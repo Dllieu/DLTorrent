@@ -5,22 +5,15 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include "RootMetaInfo.h"
+#include "BEncoder.h"
+#include "utility/Sha1Encoder.h"
 
 using namespace parsing;
 namespace bai = boost::asio::ip;
 
 namespace
 {
-    enum class NodeName
-    {
-        Announce,
-        AnnounceList,
-        Info
-    };
-
-    boost::asio::io_service io_service;
-
-    // TODO: use regexp?
+    // TODO: use regexp and handle more formatting ? (do that once html is handled)
     void   push_udp_endpoint( std::vector< bai::udp::endpoint >& endpoints, const std::string& url )
     {
         static std::string expectedToStartWith( "udp://" );
@@ -41,6 +34,8 @@ namespace
 
         auto port = url.substr( from, to - from );
 
+        // TODO : PUT SOMEWHERE ELSE WHICH MAKE MORE SENSE
+        boost::asio::io_service io_service;
         bai::udp::resolver::query query( bai::udp::v4(), hostname, port );
         bai::udp::resolver resolver( io_service );
 
@@ -73,10 +68,10 @@ namespace
     }
 }
 
-// todo : calculate sha1
 RootMetaInfo::RootMetaInfo( MetaInfoDictionary&& root )
     : root_( root )
     , announcers_( parse_endpoint_from_root_metainfo( root_ ) )
+    , hashInfo_( utility::Sha1Encoder::instance().encode( BEncoder::encode( root_[ "info" ] ) ) )
 {
     // NOTHING
 }
@@ -84,4 +79,9 @@ RootMetaInfo::RootMetaInfo( MetaInfoDictionary&& root )
 const std::vector< bai::udp::endpoint >&    RootMetaInfo::getAnnouncers() const
 {
     return announcers_;
+}
+
+const std::array< char, 20 >&               RootMetaInfo::getHashInfo() const
+{
+    return hashInfo_;
 }
