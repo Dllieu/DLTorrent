@@ -14,38 +14,35 @@ using namespace parsing;
 
 namespace
 {
-    void   push_udp_endpoint( std::vector< bai::udp::endpoint >& endpoints, const std::string& url, boost::asio::io_service& ioService )
-    {
-        char hostname[1024];
-        auto port = static_cast< unsigned short >( 0 );
-        if ( std::sscanf( url.c_str(), "udp://%1023[^:]:%hd", hostname, &port ) != 2 || hostname[0] == '\0' )
-            return;
-
-        bai::udp::resolver::query query( bai::udp::v4(), hostname, std::to_string( port ) );
-        bai::udp::resolver resolver( ioService );
-
-        try
-        {
-            bai::udp::resolver::iterator end;
-            for ( auto it = resolver.resolve( query ); it != end; ++it )
-                endpoints.emplace_back( bai::udp::endpoint( *it ) );
-        }
-        catch ( ... )
-        {
-            // Log -> hostname / port : unreachable
-        }
-    }
-
     std::vector< bai::udp::endpoint >   parse_endpoints_from_root_metainfo( const MetaInfoList& announceList )
     {
         boost::asio::io_service ioService;
 
+        char hostname[1024];
+        auto port = static_cast< unsigned short >( 0 );
         std::vector< bai::udp::endpoint > result;
         for ( const auto& subAnnounceList : announceList )
         {
             const auto& urlList = boost::get< MetaInfoList >( subAnnounceList );
             for ( const auto& url : urlList )
-                push_udp_endpoint( result, boost::get< MetaInfoString >( url ), ioService );
+            {
+                if ( std::sscanf( url.c_str(), "udp://%1023[^:]:%hd", hostname, &port ) != 2 || hostname[0] == '\0' )
+                    continue;
+        
+                bai::udp::resolver::query query( bai::udp::v4(), hostname, std::to_string( port ) );
+                bai::udp::resolver resolver( ioService );
+        
+                try
+                {
+                    bai::udp::resolver::iterator end;
+                    for ( auto it = resolver.resolve( query ); it != end; ++it )
+                        result.emplace_back( bai::udp::endpoint( *it ) );
+                }
+                catch ( ... )
+                {
+                    // Log -> hostname / port : unreachable
+                }
+            }
         }
         return result;
     }
