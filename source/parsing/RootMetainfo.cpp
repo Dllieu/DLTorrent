@@ -3,6 +3,7 @@
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
 #include <boost/algorithm/string/predicate.hpp>
+#include <stdio>
 #include <iostream>
 
 #include "utility/Sha1Encoder.h"
@@ -13,28 +14,14 @@ using namespace parsing;
 
 namespace
 {
-    // TODO: use regexp and handle more formatting ? (do that once html is handled)
     void   push_udp_endpoint( std::vector< bai::udp::endpoint >& endpoints, const std::string& url, boost::asio::io_service& ioService )
     {
-        static std::string expectedToStartWith( "udp://" );
-
-        if ( !boost::starts_with( url, expectedToStartWith ) )
+        char hostname[1024];
+        auto port = static_cast< unsigned short >( 0 );
+        if ( std::sscanf( url.c_str(), "udp://%1023[^:]:%hd", hostname, &port ) != 2 || hostname[0] == '\0' )
             return;
 
-        auto from = expectedToStartWith.size();
-        auto to = url.find( ':', from );
-        if ( to == std::string::npos )
-            return;
-
-        auto hostname = url.substr( from, to - from );
-        from = to + 1;
-        to = url.find( '/', from );
-        if ( to == std::string::npos )
-            return;
-
-        auto port = url.substr( from, to - from );
-
-        bai::udp::resolver::query query( bai::udp::v4(), hostname, port );
+        bai::udp::resolver::query query( bai::udp::v4(), hostname, std::to_string( port ) );
         bai::udp::resolver resolver( ioService );
 
         try
