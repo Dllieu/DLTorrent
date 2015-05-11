@@ -126,7 +126,7 @@ namespace utility
 
         void     readString( std::string& s, size_t sizeToRead )
         {
-            s.resize( sizeToRead );
+            s.resize( sizeToRead + 1 );
 
             auto lastNonTerminationChar = static_cast< size_t >( 0 );
             for ( auto i = 0; i < sizeToRead; ++i )
@@ -136,7 +136,12 @@ namespace utility
                     lastNonTerminationChar = i;
             }
 
-            s.resize( lastNonTerminationChar + 1 ); // + \0
+            auto effectiveSize = static_cast< size_t >( lastNonTerminationChar + 1 );
+            s[ effectiveSize ] = '\0';
+            if ( effectiveSize < sizeToRead )
+                s.resize( effectiveSize ); // shrink
+
+            s.shrink_to_fit();
         }
 
     private:
