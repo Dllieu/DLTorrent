@@ -71,6 +71,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\source\parsing\BDecoder.h" />
     <ClInclude Include="..\..\source\parsing\BEncoder.h" />
+    <ClInclude Include="..\..\source\parsing\IoService.h" />
     <ClInclude Include="..\..\source\parsing\Metainfo.h" />
     <ClInclude Include="..\..\source\parsing\RootMetaInfo.h" />
     <ClInclude Include="..\..\source\parsing\Tracker.h" />

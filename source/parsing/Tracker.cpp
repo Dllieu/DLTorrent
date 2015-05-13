@@ -6,6 +6,7 @@
 #include <iostream>
 #include <thread>
 
+#include "IoService.h"
 #include "utility/Sha1Encoder.h"
 #include "utility/RandomGenerator.h"
 #include "RootMetaInfo.h"
@@ -27,7 +28,7 @@ struct Tracker::PImpl
     PImpl( RootMetaInfo&& root )
         : root( root )
         , running( false )
-        , socket_( ioService_ )
+        , socket_( IoService::instance() )
     {}
 
     void    start()
@@ -49,9 +50,6 @@ struct Tracker::PImpl
         prepare_connect();
         socket_.async_send_to( boost::asio::buffer( buffer_.getDataForReading(), buffer_.size() ), currentEndpoint_,
                                [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { onSend( errorCode, bytesTransferred ); } );
-
-        // test crade blocking
-        ioService_.run();
     }
 
     void    onReceive( const boost::system::error_code& error, std::size_t bytesTransferred )
@@ -271,7 +269,6 @@ struct Tracker::PImpl
     private:
         utility::GenericBigEndianBuffer< 2048 >     buffer_; // must reduce size corresponding of the max size message
 
-        boost::asio::io_service                     ioService_;
         bai::udp::socket                            socket_;
 
         bai::udp::endpoint                          currentEndpoint_;
@@ -286,30 +283,12 @@ struct Tracker::PImpl
 
 Tracker::Tracker( RootMetaInfo&& root )
     : pimpl_( std::make_unique< PImpl >( std::move( root ) ) )
-    , root_( pimpl_->root  ) // debug
-    , socket_( ioService_ )
-    , peerId_( "-DL0101-zzzzz" ) // Todo: global by torrent client app (should not be unique by tracker)
-{
-    //socket_.set_option();
-}
+{}
 
 Tracker::~Tracker() = default;
-
 // Default move constructors not supporter by VS2013
 //Tracker::Tracker( Tracker&& ) = default;
 //Tracker& Tracker::operator=( Tracker&& ) = default;
-
-namespace
-{
-    // faire un truc qui listen
-    // start fera, si !alive -> envoie "1 - CONNECT"
-    // si timeout -> alive == false
-    // sinon process message, si action == 2 (error) -> alive = false
-
-    // use a deadline timer
-
-    // doing async_receive_from && async_send_to in != thread not thread safe
-}
 
 const RootMetaInfo&     Tracker::getRootMetaInfo() const
 {

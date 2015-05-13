@@ -14,6 +14,7 @@
 #include "parsing/TorrentReader.h"
 #include "parsing/Tracker.h"
 #include "parsing/RootMetaInfo.h"
+#include "parsing/IoService.h"
 
 #include "utility/DebugTools.h"
 
@@ -34,6 +35,10 @@ BOOST_AUTO_TEST_SUITE( TrackerTestSuite )
 // example : http://stackoverflow.com/questions/22791021/bittorrent-client-getting-peer-list-from-trackers-python
 BOOST_AUTO_TEST_CASE( TrackerTest )
 {
+    // first step
+    //boost::asio::io_service::work work( parsing::IoService::instance() );
+
+
     auto tracker = TorrentReader::read( "E:\\Downloads\\example.torrent" );
 
     // DEBUG Utils
@@ -43,8 +48,14 @@ BOOST_AUTO_TEST_CASE( TrackerTest )
     tracker.getRootMetaInfo().display();
     tracker.scrape();
 
+    //boost::asio::io_service::work work( parsing::IoService::instance() );
+    parsing::IoService::instance().run();
+
     for (;;)
+    {
         std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+        std::cout << ".";
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // ! TrackerTestSuite

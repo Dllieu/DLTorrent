@@ -31,27 +31,8 @@ namespace parsing
         explicit Tracker( RootMetaInfo&& root );
 
     private:
-        utility::GenericBigEndianBuffer< 2048 >     buffer_; // must reduce size corresponding of the max size message
-
-        boost::asio::io_service                     ioService_;
-        bai::udp::socket                            socket_;
-
-        // should be infos by endpoint
-        int                                         transactionId_;
-        uint64_t                                    connectionId_;
-        // ! should be infos by endpoint
-
-        // should be known at initialization
-        std::string                                 peerId_;
-
-    private:
         struct PImpl;
         std::unique_ptr< PImpl >    pimpl_;
-
-
-
-
-        const RootMetaInfo&                          root_;
     };
 }
 
