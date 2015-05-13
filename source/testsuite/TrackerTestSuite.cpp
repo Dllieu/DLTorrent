@@ -8,6 +8,7 @@
 #include <boost/utility/string_ref.hpp>
 #include <boost/uuid/sha1.hpp>
 
+#include <thread>
 #include <iostream>
 
 #include "parsing/TorrentReader.h"
@@ -21,7 +22,6 @@ using namespace boost::asio::ip;
 
 BOOST_AUTO_TEST_SUITE( TrackerTestSuite )
 
-// recup https://github.com/rakshasa/libtorrent/blob/99e33c005a04c329c32b8bf26c48bd15725dfffd/src/net/protocol_buffer.h
 // set baser sur l'implem https://github.com/rakshasa/libtorrent/blob/99e33c005a04c329c32b8bf26c48bd15725dfffd/src/tracker/tracker_udp.cc
 // https://github.com/rakshasa/libtorrent/tree/master/src/tracker
 
@@ -42,6 +42,9 @@ BOOST_AUTO_TEST_CASE( TrackerTest )
 
     tracker.getRootMetaInfo().display();
     tracker.scrape();
+
+    for (;;)
+        std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 }
 
 BOOST_AUTO_TEST_SUITE_END() // ! TrackerTestSuite

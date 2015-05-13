@@ -3,7 +3,7 @@
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
 #include <boost/algorithm/string/predicate.hpp>
-#include <stdio>
+#include <cstdio>
 #include <iostream>
 
 #include "utility/Sha1Encoder.h"
@@ -22,13 +22,11 @@ namespace
         auto port = static_cast< unsigned short >( 0 );
         std::vector< bai::udp::endpoint > result;
         for ( const auto& subAnnounceList : announceList )
-        {
-            const auto& urlList = boost::get< MetaInfoList >( subAnnounceList );
-            for ( const auto& url : urlList )
+            for ( const auto& metaUrl : boost::get< MetaInfoList >( subAnnounceList ) )
             {
-                if ( std::sscanf( url.c_str(), "udp://%1023[^:]:%hd", hostname, &port ) != 2 || hostname[0] == '\0' )
+                if ( std::sscanf( boost::get< MetaInfoString >( metaUrl ).c_str(), "udp://%1023[^:]:%hd", hostname, &port ) != 2 || hostname[ 0 ] == '\0' )
                     continue;
-        
+
                 bai::udp::resolver::query query( bai::udp::v4(), hostname, std::to_string( port ) );
                 bai::udp::resolver resolver( ioService );
         
@@ -43,7 +41,7 @@ namespace
                     // Log -> hostname / port : unreachable
                 }
             }
-        }
+
         return result;
     }
 

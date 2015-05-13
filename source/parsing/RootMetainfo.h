@@ -38,11 +38,11 @@ namespace parsing
         }
 
     private:
-        MetaInfoDictionary                  root_;
+        const MetaInfoDictionary                  root_;
 
-        std::vector< bai::udp::endpoint >   announcers_;
-        std::array< char, 20 >              hashInfo_;
-        uint64_t                            bytesToDownload_;
+        const std::vector< bai::udp::endpoint >   announcers_;
+        const std::array< char, 20 >              hashInfo_;
+        const uint64_t                            bytesToDownload_;
     };
 }
 

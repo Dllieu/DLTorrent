@@ -19,21 +19,22 @@ namespace parsing
     class Tracker
     {
     public:
-        const RootMetaInfo&     getRootMetaInfo() const
-        {
-            return root_;
-        }
+        const RootMetaInfo&     getRootMetaInfo() const;
 
         void                    scrape();
+
+        // Forward declaration of Pimpl
+        ~Tracker();
 
     private:
         friend class TorrentReader;
         explicit Tracker( RootMetaInfo&& root );
 
     private:
-        RootMetaInfo                                root_;
-        utility::GenericBigEndianBuffer< 2048 >     buffer_;
+        utility::GenericBigEndianBuffer< 2048 >     buffer_; // must reduce size corresponding of the max size message
+
         boost::asio::io_service                     ioService_;
+        bai::udp::socket                            socket_;
 
         // should be infos by endpoint
         int                                         transactionId_;
@@ -42,6 +43,15 @@ namespace parsing
 
         // should be known at initialization
         std::string                                 peerId_;
+
+    private:
+        struct PImpl;
+        std::unique_ptr< PImpl >    pimpl_;
+
+
+
+
+        const RootMetaInfo&                          root_;
     };
 }
 
