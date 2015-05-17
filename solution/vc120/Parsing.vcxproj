@@ -73,6 +73,7 @@
     <ClInclude Include="..\..\source\parsing\BEncoder.h" />
     <ClInclude Include="..\..\source\parsing\IoService.h" />
     <ClInclude Include="..\..\source\parsing\Metainfo.h" />
+    <ClInclude Include="..\..\source\parsing\Peer.h" />
     <ClInclude Include="..\..\source\parsing\RootMetaInfo.h" />
     <ClInclude Include="..\..\source\parsing\Tracker.h" />
     <ClInclude Include="..\..\source\parsing\TorrentReader.h" />
@@ -81,6 +82,7 @@
     <ClCompile Include="..\..\source\parsing\BDecoder.cpp" />
     <ClCompile Include="..\..\source\parsing\BEncoder.cpp" />
     <ClCompile Include="..\..\source\parsing\MetaInfo.cpp" />
+    <ClCompile Include="..\..\source\parsing\Peer.cpp" />
     <ClCompile Include="..\..\source\parsing\RootMetaInfo.cpp" />
     <ClCompile Include="..\..\source\parsing\Tracker.cpp" />
     <ClCompile Include="..\..\source\parsing\TorrentReader.cpp" />

@@ -60,7 +60,7 @@ namespace
 
 RootMetaInfo::RootMetaInfo( MetaInfoDictionary&& root )
     : root_( root )
-    , announcers_( parse_endpoints_from_root_metainfo( boost::get< MetaInfoList >( root_.at( "announce-list" ) ) ) )
+    , announcers_( parse_endpoints_from_root_metainfo( boost::get< MetaInfoList >( root_.at( "announce-list" ) ) ) ) // also add "announce" as announce-list is optional
     , hashInfo_( utility::Sha1Encoder::instance().encode( BEncoder::encode( root_.at( "info" ) ) ) )
     , bytesToDownload_( parse_total_length( boost::get< MetaInfoDictionary >( root_.at( "info" ) ) ) )
 {

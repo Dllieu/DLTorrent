@@ -5,14 +5,7 @@
 #ifndef __PARSING_TRACKER_H__
 #define __PARSING_TRACKER_H__
 
-#include <boost/asio/ip/udp.hpp>
-#include <array>
-
-#include "MetaInfo.h"
 #include "RootMetaInfo.h"
-#include "utility/GenericBigEndianBuffer.h"
-
-namespace bai = boost::asio::ip;
 
 namespace parsing
 {
@@ -21,7 +14,7 @@ namespace parsing
     public:
         const RootMetaInfo&     getRootMetaInfo() const;
 
-        void                    scrape();
+        void                    start();
 
         // Forward declaration of Pimpl
         ~Tracker();

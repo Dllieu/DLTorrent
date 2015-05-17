@@ -6,11 +6,17 @@
 #include <iostream>
 #include <thread>
 
-#include "IoService.h"
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/write.hpp>
+
+#include "utility/GenericBigEndianBuffer.h"
 #include "utility/Sha1Encoder.h"
 #include "utility/RandomGenerator.h"
+
+#include "IoService.h"
 #include "RootMetaInfo.h"
 #include "Tracker.h"
+#include "Peer.h"
 
 using namespace parsing;
 
@@ -89,7 +95,7 @@ struct Tracker::PImpl
         buffer_ >> receivedAction >> receivedTransactionId;
         if ( receivedAction != action_
             || receivedTransactionId != transactionId_
-            || ! read_result() )
+            || ! parse_result() )
             return false;
 
         buffer_.clear();
@@ -97,7 +103,7 @@ struct Tracker::PImpl
         return true;
     }
 
-    bool    read_result()
+    bool    parse_result()
     {
         if ( action_ == 2 )
             return parse_scrape();
@@ -138,6 +144,87 @@ struct Tracker::PImpl
         return true;
     }
 
+    // Handshake
+    // The handshake is a required message and must be the first message transmitted by the client.It is( 49 + len( pstr ) ) bytes long.
+    // handshake: <pstrlen><pstr><reserved><info_hash><peer_id>
+    // pstrlen : string length of <pstr>, as a single raw byte
+    // pstr : string identifier of the protocol
+    // reserved : eight( 8 ) reserved bytes.All current implementations use all zeroes.Each bit in these bytes can be used to change the behavior of the protocol.An email from Bram suggests that trailing bits should be used first, so that leading bits may be used to change the meaning of trailing bits.
+    // info_hash : 20 - byte SHA1 hash of the info key in the metainfo file.This is the same info_hash that is transmitted in tracker requests.
+    // peer_id : 20 - byte string used as a unique ID for the client.This is usually the same peer_id that is transmitted in tracker requests( but not always e.g.an anonymity option in Azureus ).
+
+
+    // The peer should immediately respond with his own handshake message, which takes the same form as yours.
+    // If you received a peer_id in your tracker response, you should check that the peer_id provided by the peer in the handshake matches what you expect.
+    // If it does not, you should close the connection.
+    void test_stuff( std::vector< bai::udp::endpoint >& endpoints )
+    {
+        buffer_.clear();
+        //bytes(chr(19))+"BitTorrent protocol00000000"+self.getInfoHash(torrentCont)+self.peer_id
+        std::stringstream wiresharkSs;
+        bool first = true;
+        std::vector< bai::tcp::endpoint > tcpEndpoints;
+        for ( auto& endpoint : endpoints )
+        {
+            if (first)
+                first = false;
+            else
+                wiresharkSs << " || ";
+            wiresharkSs << "ip.dst == " << endpoint.address() << " || ip.src == " << endpoint.address();
+            tcpEndpoints.emplace_back( bai::tcp::endpoint( endpoint.address(), endpoint.port() ) );
+        }
+
+        std::string debugggg = wiresharkSs.str();
+        static Peer peer( tcpEndpoints );
+        static bool stufffff = false; // just test
+        if ( !stufffff )
+        {
+            peer.connect();
+            stufffff = true;
+        }
+
+        return;
+        std::this_thread::sleep_for( std::chrono::seconds( 1000 ) );
+        for ( auto& endpoint : tcpEndpoints )
+        {
+            std::cout << endpoint << std::endl;
+            // TODO : uTP protocol instead, for better time packet consuming (http://www.bittorrent.org/beps/bep_0029.html)
+
+            std::string protocolUsed( "BitTorrent protocol" );
+
+            buffer_ << static_cast< char >( protocolUsed.size() );
+            buffer_.writeString( protocolUsed, protocolUsed.size() );
+
+            buffer_ << static_cast< uint64_t >( 0 ); // reserved bytes
+
+            buffer_.writeArray( root.getHashInfo() );
+            buffer_.writeString( /*peerId_*/"-DL0101-zzzzz", 20 );
+
+            // TCP socket
+            boost::asio::deadline_timer deadlineTimer( IoService::instance() );
+
+            bai::tcp::socket socket( IoService::instance() );
+            socket.open( bai::tcp::v4() );
+
+            socket.connect( endpoint );
+            //socket.send( boost::asio::buffer( buffer_.getDataForReading(), buffer_.size() ), currentEndpoint );
+            try
+            {
+                // http://www.boost.org/doc/libs/1_52_0/doc/html/boost_asio/example/timeouts/blocking_tcp_client.cpp
+                // should skip if no answer, if answer then we have one good peer
+                boost::asio::write( socket, boost::asio::buffer( buffer_.getDataForReading(), buffer_.size() ) );
+            }
+            catch ( ... )
+            {
+                std::cout << "exception" << std::endl;
+            }
+
+            buffer_.clear();
+            //buffer_.updateDataWritten( socket_.receive_from( boost::asio::buffer( buffer_.getDataForWriting(), buffer_.capacity() ), endpoint ) );
+            //std::cout << "Received: " << buffer_.size() << std::endl;
+        }
+    }
+
     // Offset      Size            Name            Value
     //  8           32 - bit integer  interval
     //  12          32 - bit integer  leechers
@@ -168,8 +255,10 @@ struct Tracker::PImpl
             buffer_ >> ipAddress >> port;
 
             peerEndpoints.emplace_back( bai::udp::endpoint( boost::asio::ip::address_v4( ipAddress ), port ) );
-            std::cout << peerEndpoints.back() << std::endl;
         }
+
+        // to remove (test)
+        test_stuff( peerEndpoints );
 
         std::cout << "Peers available: " << peerEndpoints.size() << std::endl;
         std::cout << "leechers: " << leechers << " | seeders: " << seeders << std::endl;
@@ -224,12 +313,15 @@ struct Tracker::PImpl
     //  96      16 - bit integer  port
     void    prepare_announce()
     {
+        // TODO : clean this crap
         static bool first = true;
-        if (first)
+        if ( first )
             first = false;
         else
         {
+            return;
             std::this_thread::sleep_for( std::chrono::seconds( 10 ) );
+            return; // test
         }
 
 
@@ -295,7 +387,7 @@ const RootMetaInfo&     Tracker::getRootMetaInfo() const
     return pimpl_->root;
 }
 
-void    Tracker::scrape()
+void    Tracker::start()
 {
     pimpl_->start();
 }

@@ -31,6 +31,9 @@
     <ClInclude Include="..\..\source\parsing\IoService.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\parsing\Peer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\parsing\MetaInfo.cpp">
@@ -50,6 +53,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\parsing\RootMetaInfo.cpp">
       <Filter>Source Files\Parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\parsing\Peer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
