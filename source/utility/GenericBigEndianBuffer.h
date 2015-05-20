@@ -124,6 +124,13 @@ namespace utility
             return *this;
         }
 
+        template < typename T, size_t N >
+        void    readArray( std::array< T, N >& a )
+        {
+            for ( auto i = 0; i < a.size(); ++i )
+                operator>>( a[ i ] );
+        }
+
         void     readString( std::string& s, size_t sizeToRead )
         {
             s.resize( sizeToRead + 1 );

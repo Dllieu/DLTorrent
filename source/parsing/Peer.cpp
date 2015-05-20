@@ -3,6 +3,10 @@
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
 
+#include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
+
+#include <thread>
 #include <iostream>
 
 #include "utility/GenericBigEndianBuffer.h"
@@ -27,32 +31,190 @@ using namespace parsing;
 // - 1817 : peer_connection::incoming_piece(
 // 
 
+
+// TODO : update endpoints once in a while (when we have tried all endpoint -> notify Tracker to request more)
+
 namespace
 {
     size_t TEST_INDEX = 0;
+
+    enum class PeerMessage
+    {
+        Handshake,
+        KeepAlive,
+
+        // Custom messages
+        Inactive
+    };
 }
-
-
-// check like http://codereview.stackexchange.com/questions/3770/bittorrent-peer-protocol-messages
-
-// pour test, on prend une lsite ip/port, on les bourre tous
-Peer::Peer( const std::vector< bai::tcp::endpoint >& endpoints )
-    : socket_( IoService::instance() )
-    , deadline_( IoService::instance() )
-    , endpoints_( endpoints ) // need to udpate it once in a while (i.e. when attempting every endpoints)
-{
-    // NOTHING
-}
-
 
 // Design from http://www.boost.org/doc/libs/1_45_0/doc/html/boost_asio/example/timeouts/async_tcp_client.cpp
-void    Peer::checkDeadline( const boost::system::error_code& errorCode )
+struct Peer::PImpl
 {
-    // Check whether the deadline has passed. We compare the deadline against
-    // the current time since a new asynchronous operation may have moved the
-    // deadline before this actor had a chance to run.
-    if ( deadline_.expires_at() <= boost::asio::deadline_timer::traits_type::now() )
+    PImpl( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo )
+        : socket_( IoService::instance() )
+        , deadline_( IoService::instance() )
+        , endpoints_( endpoints )
+        , hashInfo_( hashInfo )
+    {}
+
+    void    connect()
     {
+        if ( endpoints_.empty() || TEST_INDEX >= endpoints_.size() )
+        {
+            std::cout << "No endpoint to connect to..." << std::endl;
+            return;
+        }
+
+        deadline_.async_wait( [ this ] ( const boost::system::error_code& errorCode ) { checkDeadline( errorCode ); } );
+
+        // do a queue et pop ?
+        auto endpoint = endpoints_[ TEST_INDEX++ ];
+        std::cout << "Trying " << endpoint << "...\n";
+        deadline_.expires_from_now( boost::posix_time::seconds( 2 ) );
+        socket_.async_connect( endpoint, [ this, endpoint ] ( const boost::system::error_code& errorCode ) { onConnectResult( errorCode, endpoint ); } );
+    }
+
+    bool    exitAndConnectIfInvalidSocket( const boost::system::error_code& errorCode )
+    {
+        if ( socket_.is_open() && ! errorCode )
+            return false;
+
+        if ( errorCode )
+        {
+            std::cout << "error: " << errorCode.message() << std::endl;
+            socket_.close();
+        }
+        else
+            std::cout << "action timed out\n" << std::endl;
+
+        connect();
+        return true;
+    }
+
+    #define EXIT_AND_CONNECT_IF_INVALID_SOCKET( ERROR ) if ( exitAndConnectIfInvalidSocket( ERROR ) ) return
+
+    void    onConnectResult( const boost::system::error_code& errorCode, const bai::tcp::endpoint& endpoint )
+    {
+        EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
+
+        std::cout << "Connected to " << endpoint << "\n";
+        setupMessage( PeerMessage::Handshake );
+    }
+
+    template < typename T >
+    void    setupAsyncRead( T&& asyncHandler, std::size_t messageToReceiveSize )
+    {
+        deadline_.expires_from_now( boost::posix_time::seconds( 30 ) );
+        boost::asio::async_read( socket_, boost::asio::buffer( bufferReceive_.getDataForWriting(), messageToReceiveSize ), std::forward< T >( asyncHandler ) );
+    }
+
+    void    onAsyncWriteResult( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
+    {
+        EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
+        std::cout << "async write succeed" << std::endl;
+    }
+
+    void    setupAsyncWrite()
+    {
+        boost::asio::async_write( socket_, boost::asio::buffer( bufferSend_.getDataForReading(), bufferSend_.size() ),
+                                  [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { onAsyncWriteResult( errorCode, bytesTransferred ); } );
+    }
+
+    void    onKeepAliveResult( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
+    {
+        EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
+
+        std::cout << "keep alive ok" << std::endl;
+        setupMessage( PeerMessage::KeepAlive );
+    }
+
+    void    onHandshakeResult( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
+    {
+        EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
+
+        bufferReceive_.updateDataWritten( bytesTransferred );
+
+        std::cout << "read succeed" << std::endl;
+
+        char n = 0;
+        bufferReceive_ >> n;
+        std::string protocolUsed;
+        bufferReceive_.readString( protocolUsed, n );
+        std::cout << "Peer protocol: " << protocolUsed << std::endl;
+
+        uint64_t useless = 0;
+        bufferReceive_ >> useless;
+
+
+        std::array< char, 20 > hash;
+        bufferReceive_.readArray( hash );
+
+
+        std::string peerId;
+        bufferReceive_.readString( peerId, 20 );
+        std::cout << "Peer id: " << peerId << std::endl;
+
+        setupMessage( PeerMessage::KeepAlive );
+    }
+
+    void    prepare_keep_alive()
+    {
+        bufferSend_ << 0;
+    }
+
+    void    prepare_handshake()
+    {
+        // todo
+        std::string protocolUsed( "BitTorrent protocol" );
+
+        bufferSend_ << static_cast< char >( protocolUsed.size() );
+        bufferSend_.writeString( protocolUsed, protocolUsed.size() );
+
+        bufferSend_ << static_cast< uint64_t >( 0 ); // reserved bytes
+
+        bufferSend_.writeArray( hashInfo_ );
+        bufferSend_.writeString( /*peerId_*/"-DL0101-zzzzz", 20 ); // todo
+    }
+
+    void    setupMessage( PeerMessage peerMessage )
+    {
+        bufferSend_.clear();
+        bufferReceive_.clear();
+
+        switch ( peerMessage )
+        {
+            case PeerMessage::Handshake:
+                setupAsyncRead( [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { onHandshakeResult( errorCode, bytesTransferred ); }, 68 );
+                prepare_handshake();
+                break;
+
+            case PeerMessage::KeepAlive:
+                //std::this_thread::sleep_for( std::chrono::seconds( 10 ) ); // test purpose (gros probleme si on bourrine, ca coupe a partir d'un moment, toutes les autres actions vont fail)
+                setupAsyncRead( [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { onKeepAliveResult( errorCode, bytesTransferred ); }, 1 );
+                prepare_keep_alive();
+                break;
+
+            default:
+                std::cout << "Unhandled PeerMessage: " << static_cast< int >( peerMessage ) << std::endl;
+                return;
+        }
+
+        setupAsyncWrite();
+    }
+
+    void    checkDeadline( const boost::system::error_code& errorCode )
+    {
+        // Check whether the deadline has passed. We compare the deadline against
+        // the current time since a new asynchronous operation may have moved the
+        // deadline before this actor had a chance to run.
+        if ( deadline_.expires_at() > boost::asio::deadline_timer::traits_type::now() )
+        {
+            // Put the actor back to sleep.
+            deadline_.async_wait( [ this ] ( const boost::system::error_code& errorCode ) { checkDeadline( errorCode ); } );
+            return;
+        }
+
         // The deadline has passed. The socket is closed so that any outstanding
         // asynchronous operations are cancelled.
         socket_.close();
@@ -62,61 +224,38 @@ void    Peer::checkDeadline( const boost::system::error_code& errorCode )
         deadline_.expires_at( boost::posix_time::pos_infin );
     }
 
-    // comprend pas l'interet de le resttart ici, cense etre fait au niveau du Peer::onConnect sinon on va possiblement faitre pop 2 thread sur le meme truc
-    // Put the actor back to sleep.
-    //deadline_.async_wait( [ this ] ( const boost::system::error_code& errorCode ) { checkDeadline( errorCode ); } );
-}
 
-void    Peer::onConnect( const boost::system::error_code& errorCode, const bai::tcp::endpoint& endpoint )
+public:
+    const std::array< char, 20 >                hashInfo_;
+
+private:
+    bai::tcp::socket                            socket_;
+    boost::asio::deadline_timer                 deadline_;
+    std::vector< bai::tcp::endpoint >           endpoints_;
+
+    // must reduce size corresponding of the max size message
+    utility::GenericBigEndianBuffer< 2048 >     bufferReceive_;
+    utility::GenericBigEndianBuffer< 2048 >     bufferSend_;
+};
+
+#undef EXIT_AND_CONNECT_IF_INVALID_SOCKET
+
+
+// check like http://codereview.stackexchange.com/questions/3770/bittorrent-peer-protocol-messages
+
+// pour test, on prend une lsite ip/port, on les bourre tous
+Peer::Peer( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo )
+    : pimpl_( std::make_unique< PImpl >( endpoints, hashInfo ) )
 {
-    // in case timeout from deadline_
-    if ( ! socket_.is_open() )
-    {
-        std::cout << "Connect timed out\n";
-
-        // Try the next available endpoint.
-        connect();
-        return;
-    }
-
-    // Check if the connect operation failed before the deadline expired.
-    if ( errorCode )
-    {
-        std::cout << "Connect error: " << errorCode.message() << "\n";
-
-        // We need to close the socket used in the previous connection attempt
-        // before starting a new one.
-        socket_.close();
-
-        // Try the next available endpoint.
-        connect();
-        return;
-    }
-
-    // Otherwise we have successfully established a connection.
-    std::cout << "Connected to " << endpoint << "\n";
-    socket_.close();
-    connect();
-    //// Start the input actor.
-    //start_read();
-
-    //// Start the heartbeat actor.
-    //start_write();
+    // NOTHING
 }
+
+Peer::~Peer() = default;
+// Default move constructors not supporter by VS2013
+//Peer::Peer( Peer&& ) = default;
+//Peer& Peer::operator=( Peer&& ) = default;
 
 void    Peer::connect()
 {
-    if ( endpoints_.empty() || TEST_INDEX >= endpoints_.size() )
-    {
-        std::cout << "No endpoint to connect to..." << std::endl;
-        return;
-    }
-
-    deadline_.async_wait( [ this ] ( const boost::system::error_code& errorCode ) { checkDeadline( errorCode ); } );
-
-    // do a queue et pop ?
-    auto endpoint = endpoints_[ TEST_INDEX++ ];
-    std::cout << "Trying " << endpoint << "...\n";
-    deadline_.expires_from_now( boost::posix_time::seconds( 2 ) );
-    socket_.async_connect( endpoint, [ this, endpoint ] ( const boost::system::error_code& errorCode ) { onConnect( errorCode, endpoint ); } );
+    pimpl_->connect();
 }

@@ -7,6 +7,10 @@
 
 #include <boost/asio/ip/tcp.hpp>
 
+#include <vector>
+#include <array>
+#include <memory>
+
 namespace bai = boost::asio::ip;
 
 namespace parsing
@@ -14,18 +18,15 @@ namespace parsing
     class Peer
     {
     public:
-        Peer( const std::vector< bai::tcp::endpoint >& endpoints );
+        Peer( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo );
+        // Forward declaration of Pimpl
+        ~Peer();
 
         void    connect();
 
     private:
-        void    onConnect( const boost::system::error_code& errorCode, const bai::tcp::endpoint& endpoint );
-        void    checkDeadline( const boost::system::error_code& errorCode );
-
-    private:
-        bai::tcp::socket                    socket_;
-        boost::asio::deadline_timer         deadline_;
-        std::vector< bai::tcp::endpoint >   endpoints_;
+        struct PImpl;
+        std::unique_ptr< PImpl >    pimpl_;
     };
 }
 

@@ -22,7 +22,22 @@ using namespace parsing;
 
 #define UNINITIALIZED_CONNECTION_ID 0x41727101980
 
-// http://en.wikipedia.org/wiki/Tracker_scrape
+namespace
+{
+    enum class TrackerMessage
+    {
+        // API actions
+        Connect = 0,
+        Announce = 1,
+        Scrap = 2,
+        Error = 3,
+
+        // Custom messages
+        Inactive
+    };
+}
+
+// http://en.wikipedia.org/wiki/Tracker_scrap
 // http://www.bittorrent.org/beps/bep_0015.html
 // TODO
 // 1 - on fait un announce pour obtenir la liste des peers (tres bandwith consuming)
@@ -105,28 +120,39 @@ struct Tracker::PImpl
 
     bool    parse_result()
     {
-        if ( action_ == 2 )
-            return parse_scrape();
-        else if ( action_ == 1 )
-            return parse_announce();
-        else if ( action_ == 0 )
+        switch ( action_ )
+        {
+        case TrackerMessage::Connect:
             return parse_connect();
-        else if ( action_ == 3 )
-            return parse_error();
 
+        case TrackerMessage::Announce:
+            return parse_announce();
+
+        case TrackerMessage::Scrap:
+            return parse_scrap();
+
+        case TrackerMessage::Error:
+            return parse_error();
+        }
         return false;
     }
 
     void    prepare_to_send()
     {
-        if ( action_ == 2 )
-            prepare_scrape();
-        else if ( action_ == 1 )
-            prepare_announce();
-        else if ( action_ == 0 )
+        switch ( action_ )
+        {
+        case TrackerMessage::Connect:
             prepare_connect();
+            break;
 
-        // peut pas arriver
+        case TrackerMessage::Announce:
+            prepare_announce();
+            break;
+
+        case TrackerMessage::Scrap:
+            prepare_scrap();
+            break;
+        }
     }
 
     // Offset  Size            Name            Value
@@ -139,7 +165,7 @@ struct Tracker::PImpl
 
         std::cout << "received connect" << std::endl;
         buffer_ >> connectionId_;
-        action_ = 1; // next step : announce
+        action_ = static_cast< decltype( action_ ) >( TrackerMessage::Announce ); // next step : announce
 
         return true;
     }
@@ -174,8 +200,9 @@ struct Tracker::PImpl
             tcpEndpoints.emplace_back( bai::tcp::endpoint( endpoint.address(), endpoint.port() ) );
         }
 
+        // TODO : cleaner
         std::string debugggg = wiresharkSs.str();
-        static Peer peer( tcpEndpoints );
+        static Peer peer( tcpEndpoints, root.getHashInfo() );
         static bool stufffff = false; // just test
         if ( !stufffff )
         {
@@ -262,11 +289,15 @@ struct Tracker::PImpl
 
         std::cout << "Peers available: " << peerEndpoints.size() << std::endl;
         std::cout << "leechers: " << leechers << " | seeders: " << seeders << std::endl;
+
+        // Test: Stop once receiving one announce
+        action_ = static_cast< decltype( action_ ) >( TrackerMessage::Inactive );
+
         return true;
     }
 
     // can scrap up to 74 torrent at once
-    bool    parse_scrape()
+    bool    parse_scrap()
     {
         return false;
     }
@@ -293,7 +324,7 @@ struct Tracker::PImpl
     void    prepare_connect()
     {
         buffer_ << static_cast< uint64_t >( UNINITIALIZED_CONNECTION_ID )
-                << ( action_ = 0 )
+                << ( action_ = static_cast< decltype( action_ ) >( TrackerMessage::Connect ) )
                 << ( transactionId_ = utility::RandomGenerator< int >::instance().generate() );
     }
 
@@ -313,20 +344,8 @@ struct Tracker::PImpl
     //  96      16 - bit integer  port
     void    prepare_announce()
     {
-        // TODO : clean this crap
-        static bool first = true;
-        if ( first )
-            first = false;
-        else
-        {
-            return;
-            std::this_thread::sleep_for( std::chrono::seconds( 10 ) );
-            return; // test
-        }
-
-
         buffer_ << connectionId_
-                << ( action_ = 1 )
+                << ( action_ = static_cast< decltype( action_ ) >( TrackerMessage::Announce ) )
                 << transactionId_;
 
         std::cout << "Send Announce request with SHA1: " << utility::sha1_to_string( root.getHashInfo() ) << std::endl;
@@ -350,27 +369,26 @@ struct Tracker::PImpl
     }
 
     // can scrap up to 74 torrent at once
-    void    prepare_scrape()
+    void    prepare_scrap()
     {
     }
 
-    public:
-        const RootMetaInfo                          root;
-        std::atomic< bool >                         running;
+public:
+    const RootMetaInfo                          root;
+    std::atomic< bool >                         running;
 
-    private:
-        utility::GenericBigEndianBuffer< 2048 >     buffer_; // must reduce size corresponding of the max size message
+private:
+    utility::GenericBigEndianBuffer< 2048 >     buffer_; // must reduce size corresponding of the max size message
 
-        bai::udp::socket                            socket_;
+    bai::udp::socket                            socket_;
 
-        bai::udp::endpoint                          currentEndpoint_;
+    bai::udp::endpoint                          currentEndpoint_;
 
 
-        //
-        int                                         transactionId_;
-        uint64_t                                    connectionId_;
-        int                                         action_;
-
+    //
+    int                                         transactionId_;
+    uint64_t                                    connectionId_;
+    int                                         action_;
 };
 
 Tracker::Tracker( RootMetaInfo&& root )
