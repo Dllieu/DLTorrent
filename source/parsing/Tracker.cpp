@@ -209,47 +209,6 @@ struct Tracker::PImpl
             peer.connect();
             stufffff = true;
         }
-
-        return;
-        std::this_thread::sleep_for( std::chrono::seconds( 1000 ) );
-        for ( auto& endpoint : tcpEndpoints )
-        {
-            std::cout << endpoint << std::endl;
-            // TODO : uTP protocol instead, for better time packet consuming (http://www.bittorrent.org/beps/bep_0029.html)
-
-            std::string protocolUsed( "BitTorrent protocol" );
-
-            buffer_ << static_cast< char >( protocolUsed.size() );
-            buffer_.writeString( protocolUsed, protocolUsed.size() );
-
-            buffer_ << static_cast< uint64_t >( 0 ); // reserved bytes
-
-            buffer_.writeArray( root.getHashInfo() );
-            buffer_.writeString( /*peerId_*/"-DL0101-zzzzz", 20 );
-
-            // TCP socket
-            boost::asio::deadline_timer deadlineTimer( IoService::instance() );
-
-            bai::tcp::socket socket( IoService::instance() );
-            socket.open( bai::tcp::v4() );
-
-            socket.connect( endpoint );
-            //socket.send( boost::asio::buffer( buffer_.getDataForReading(), buffer_.size() ), currentEndpoint );
-            try
-            {
-                // http://www.boost.org/doc/libs/1_52_0/doc/html/boost_asio/example/timeouts/blocking_tcp_client.cpp
-                // should skip if no answer, if answer then we have one good peer
-                boost::asio::write( socket, boost::asio::buffer( buffer_.getDataForReading(), buffer_.size() ) );
-            }
-            catch ( ... )
-            {
-                std::cout << "exception" << std::endl;
-            }
-
-            buffer_.clear();
-            //buffer_.updateDataWritten( socket_.receive_from( boost::asio::buffer( buffer_.getDataForWriting(), buffer_.capacity() ), endpoint ) );
-            //std::cout << "Received: " << buffer_.size() << std::endl;
-        }
     }
 
     // Offset      Size            Name            Value
@@ -266,11 +225,9 @@ struct Tracker::PImpl
 
         std::cout << "!!!! " << buffer_.size() << std::endl;
 
-        int interval = 0; // in seconds
-        int leechers = 0;
-        int seeders = 0;
-        buffer_ >> interval >> leechers >> seeders;
-        
+        auto interval = static_cast< int >( buffer_ ); // in seconds
+        auto leechers = static_cast< int >( buffer_ );
+        auto seeders = static_cast< int >( buffer_ );
 
         std::cout << "Peers:" << std::endl;
         std::vector< bai::udp::endpoint > peerEndpoints;

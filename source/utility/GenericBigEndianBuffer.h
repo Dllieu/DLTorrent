@@ -5,6 +5,7 @@
 #ifndef __UTILITY_GENERICBIGENDIANBUFFER_H__
 #define __UTILITY_GENERICBIGENDIANBUFFER_H__
 
+#include <boost/utility/string_ref.hpp>
 #include <boost/endian/conversion.hpp>
 #include <array>
 
@@ -93,7 +94,7 @@ namespace utility
                 operator<<( a[ i ] );
         }
 
-        void    writeString( const std::string& s, size_t sizeToWrite )
+        void    writeString( const boost::string_ref& s, size_t sizeToWrite )
         {
             auto i = static_cast< size_t >( 0 );
             for ( ; i < sizeToWrite && i < s.size(); ++i )
@@ -101,6 +102,18 @@ namespace utility
 
             for ( ; i < sizeToWrite; ++i )
                 operator<< < unsigned char >( 0 );
+        }
+
+        // As operator= can't be staticaly overrided, override cast operator
+        // use example: auto foo = static_cast< int >( buffer );
+        template < typename T >
+        operator T()
+        {
+            static_assert( std::is_integral< T >::value, "T is not an integral" );
+
+            T t;
+            operator>>( t );
+            return t;
         }
 
         template < typename T >
@@ -133,7 +146,7 @@ namespace utility
 
         void     readString( std::string& s, size_t sizeToRead )
         {
-            s.resize( sizeToRead + 1 );
+            s.resize( sizeToRead );
 
             auto lastNonTerminationChar = static_cast< size_t >( 0 );
             for ( auto i = 0; i < sizeToRead; ++i )
@@ -144,7 +157,6 @@ namespace utility
             }
 
             auto effectiveSize = static_cast< size_t >( lastNonTerminationChar + 1 );
-            s[ effectiveSize ] = '\0';
             if ( effectiveSize < sizeToRead )
                 s.resize( effectiveSize ); // shrink
 

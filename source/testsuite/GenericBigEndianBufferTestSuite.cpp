@@ -35,6 +35,11 @@ BOOST_AUTO_TEST_CASE( IntegralTest )
     BOOST_CHECK( ni == ni2 );
     BOOST_CHECK( c == c2 );
     BOOST_CHECK( b == b2 );
+
+    buffer << i;
+    auto i3 = static_cast< int >( buffer );
+
+    BOOST_CHECK( i == i3 );
 }
 
 BOOST_AUTO_TEST_CASE( StringTestSuite )
@@ -45,7 +50,7 @@ BOOST_AUTO_TEST_CASE( StringTestSuite )
     buffer.writeString( s1, s1.size() );
 
     std::string s2;
-    buffer.readString( s2, s1.size() );
+    buffer.readString( s2, s1.size() ); // no need to take the '\0'
 
     BOOST_CHECK( s1 == s2 );
 

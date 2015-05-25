@@ -13,6 +13,9 @@
 
 namespace bai = boost::asio::ip;
 
+// TODO : when creating the peer, give him a valid socket, peer should only have the message communication
+// see https://github.com/mpetazzoni/ttorrent/blob/master/core/src/main/java/com/turn/ttorrent/client/peer/SharingPeer.java
+
 namespace parsing
 {
     class Peer

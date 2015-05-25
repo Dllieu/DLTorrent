@@ -4,7 +4,6 @@
 //--------------------------------------------------------------------------------
 #include <boost/algorithm/string/predicate.hpp>
 #include <cstdio>
-#include <iostream>
 
 #include "utility/Sha1Encoder.h"
 #include "BEncoder.h"
@@ -63,11 +62,8 @@ RootMetaInfo::RootMetaInfo( MetaInfoDictionary&& root )
     , announcers_( parse_endpoints_from_root_metainfo( boost::get< MetaInfoList >( root_.at( "announce-list" ) ) ) ) // also add "announce" as announce-list is optional
     , hashInfo_( utility::Sha1Encoder::instance().encode( BEncoder::encode( root_.at( "info" ) ) ) )
     , bytesToDownload_( parse_total_length( boost::get< MetaInfoDictionary >( root_.at( "info" ) ) ) )
+    , piece_( boost::get< MetaInfoInteger >( boost::get< MetaInfoDictionary >( root_.at( "info" ) ).at( "piece length" ) ),
+              boost::get< MetaInfoString >( boost::get< MetaInfoDictionary >( root_.at( "info" ) ).at( "pieces" ) ) )
 {
     // NOTHING
-}
-
-void    RootMetaInfo::display() const
-{
-    std::cout << root_ << std::endl;
 }

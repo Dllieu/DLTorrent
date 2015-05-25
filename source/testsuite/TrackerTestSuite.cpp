@@ -45,6 +45,8 @@ BOOST_AUTO_TEST_CASE( TrackerTest )
     std::string wiresharkFilter = utility::generate_wireshark_filter( tracker.getRootMetaInfo().getAnnouncers() );
     // ! DEBUG Utils
 
+    std::cout << tracker.getRootMetaInfo().getPiece()[3] << std::endl;
+
     //boost::asio::io_service::work work( parsing::IoService::instance() );
     // hack until work work
     //std::thread thread( [] { parsing::IoService::instance().run(); } );

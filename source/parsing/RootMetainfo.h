@@ -7,8 +7,10 @@
 
 #include <boost/asio/ip/udp.hpp>
 #include <array>
+#include <iostream>
 
 #include "MetaInfo.h"
+#include "Piece.h"
 
 namespace bai = boost::asio::ip;
 
@@ -19,9 +21,13 @@ namespace parsing
     public:
         RootMetaInfo( MetaInfoDictionary&& root );
 
-        void        display() const;
-
         // Inlines
+        void        display() const
+        {
+            std::cout << root_ << std::endl;
+        }
+
+        
         const std::vector< bai::udp::endpoint >&    getAnnouncers() const
         {
             return announcers_;
@@ -37,12 +43,18 @@ namespace parsing
             return bytesToDownload_;
         }
 
+        const Piece&   getPiece() const
+        {
+            return piece_;
+        }
+
     private:
         const MetaInfoDictionary                  root_;
 
         const std::vector< bai::udp::endpoint >   announcers_;
         const std::array< char, 20 >              hashInfo_;
         const uint64_t                            bytesToDownload_;
+        const Piece                               piece_;
     };
 }
 

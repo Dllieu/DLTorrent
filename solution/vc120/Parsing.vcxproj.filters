@@ -34,6 +34,9 @@
     <ClInclude Include="..\..\source\parsing\Peer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\parsing\Piece.h">
+      <Filter>Source Files\Parsing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\parsing\MetaInfo.cpp">

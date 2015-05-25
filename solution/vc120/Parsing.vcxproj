@@ -74,6 +74,7 @@
     <ClInclude Include="..\..\source\parsing\IoService.h" />
     <ClInclude Include="..\..\source\parsing\Metainfo.h" />
     <ClInclude Include="..\..\source\parsing\Peer.h" />
+    <ClInclude Include="..\..\source\parsing\Piece.h" />
     <ClInclude Include="..\..\source\parsing\RootMetaInfo.h" />
     <ClInclude Include="..\..\source\parsing\Tracker.h" />
     <ClInclude Include="..\..\source\parsing\TorrentReader.h" />
