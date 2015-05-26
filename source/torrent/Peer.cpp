@@ -138,7 +138,7 @@ struct Peer::PImpl
         std::cout << "Peer id: " << peerId << std::endl;
 
         // continue process hjere -> actually create a valid peer at that point -> give him the socket
-        setupMessage( PeerMessage::KeepAlive );
+        start_leeching();
     }
 
     void    prepare_handshake()
@@ -178,6 +178,11 @@ struct Peer::PImpl
 
 
 
+    void    start_leeching()
+    {
+        setupMessage( PeerMessage::KeepAlive );
+    }
+
 
     bool    exitAndConnectIfInvalidSocket( const boost::system::error_code& errorCode, bool mustConnect )
     {
@@ -198,10 +203,14 @@ struct Peer::PImpl
         return true;
     }
 
-    void    onAsyncWriteResult( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
+    void    setupAsyncWrite()
     {
-        EXIT_IF_INVALID_SOCKET( errorCode );
-        std::cout << "async write succeed" << std::endl;
+        boost::asio::async_write( socket_, boost::asio::buffer( bufferSend_.getDataForReading(), bufferSend_.size() ),
+                                  [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
+        {
+            EXIT_IF_INVALID_SOCKET( errorCode );
+            std::cout << "async write succeed" << std::endl;
+        } );
     }
 
     void    onAsyncReadResult( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
@@ -211,19 +220,19 @@ struct Peer::PImpl
 
         auto length = static_cast< int >( bufferReceive_ );
         if ( ! length )
-        {
             parse_keep_alive();
-            return;
+        else
+        {
+            // TODO
+            // https://github.com/mpetazzoni/ttorrent/blob/master/core/src/main/java/com/turn/ttorrent/client/peer/PeerExchange.java
+            auto messageType = static_cast< int >( bufferReceive_ );
+            std::cout << "Received message type: " << messageType << std::endl;
         }
 
-        auto messageType = static_cast< int >( bufferReceive_ );
-        std::cout << "Received message type: " << messageType << std::endl;
-    }
-
-    void    setupAsyncWrite()
-    {
-        boost::asio::async_write( socket_, boost::asio::buffer( bufferSend_.getDataForReading(), bufferSend_.size() ),
-                                  [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { onAsyncWriteResult( errorCode, bytesTransferred ); } );
+        if ( bufferReceive_.size() > 0 )
+            onAsyncReadResult( errorCode, bufferReceive_.size() );
+        else
+            setupAsyncRead();
     }
 
     void    setupAsyncRead()
