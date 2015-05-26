@@ -12,13 +12,13 @@
 #include "utility/GenericBigEndianBuffer.h"
 #include "utility/Sha1Encoder.h"
 #include "utility/RandomGenerator.h"
+#include "utility/IoService.h"
 
-#include "IoService.h"
 #include "RootMetaInfo.h"
 #include "Tracker.h"
 #include "Peer.h"
 
-using namespace parsing;
+using namespace torrent;
 
 #define UNINITIALIZED_CONNECTION_ID 0x41727101980
 
@@ -49,7 +49,7 @@ struct Tracker::PImpl
     PImpl( RootMetaInfo&& root )
         : root( root )
         , running( false )
-        , socket_( IoService::instance() )
+        , socket_( utility::IoService::instance() )
     {}
 
     void    start()

@@ -9,7 +9,7 @@
 #include "BEncoder.h"
 #include "RootMetaInfo.h"
 
-using namespace parsing;
+using namespace torrent;
 
 namespace
 {

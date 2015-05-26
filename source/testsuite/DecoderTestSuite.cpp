@@ -4,9 +4,9 @@
 //--------------------------------------------------------------------------------
 #include <boost/test/unit_test.hpp>
 
-#include "parsing/BDecoder.h"
+#include "torrent/BDecoder.h"
 
-using namespace parsing;
+using namespace torrent;
 
 BOOST_AUTO_TEST_SUITE( DecoderTestSuite )
 

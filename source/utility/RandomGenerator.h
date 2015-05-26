@@ -2,8 +2,8 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __PARSING_TRANSACTIONIDGENERATOR_H__
-#define __PARSING_TRANSACTIONIDGENERATOR_H__
+#ifndef __TORRENT_TRANSACTIONIDGENERATOR_H__
+#define __TORRENT_TRANSACTIONIDGENERATOR_H__
 
 #include <random>
 
@@ -33,4 +33,4 @@ namespace utility
     };
 }
 
-#endif // ! __PARSING_TRANSACTIONIDGENERATOR_H__
+#endif // ! __TORRENT_TRANSACTIONIDGENERATOR_H__

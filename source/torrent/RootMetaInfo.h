@@ -2,8 +2,8 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __PARSING_ROOTMETAINFO_H__
-#define __PARSING_ROOTMETAINFO_H__
+#ifndef __TORRENT_ROOTMETAINFO_H__
+#define __TORRENT_ROOTMETAINFO_H__
 
 #include <boost/asio/ip/udp.hpp>
 #include <array>
@@ -14,7 +14,7 @@
 
 namespace bai = boost::asio::ip;
 
-namespace parsing
+namespace torrent
 {
     class RootMetaInfo
     {
@@ -58,4 +58,4 @@ namespace parsing
     };
 }
 
-#endif // ! __PARSING_ROOTMETAINFO_H__
+#endif // ! __TORRENT_ROOTMETAINFO_H__

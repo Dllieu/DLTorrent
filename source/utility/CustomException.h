@@ -2,8 +2,8 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __PARSING_CUSTOMEXCEPTION_H__
-#define __PARSING_CUSTOMEXCEPTION_H__
+#ifndef __TORRENT_CUSTOMEXCEPTION_H__
+#define __TORRENT_CUSTOMEXCEPTION_H__
 
 #include <exception>
 
@@ -32,4 +32,4 @@ namespace utility
 #undef CUSTOM_EXCEPTION
 }
 
-#endif // ! __PARSING_CUSTOMEXCEPTION_H__
+#endif // ! __TORRENT_CUSTOMEXCEPTION_H__

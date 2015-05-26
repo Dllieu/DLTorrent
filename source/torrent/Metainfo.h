@@ -2,8 +2,8 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __PARSING_METAINFO_H__
-#define __PARSING_METAINFO_H__
+#ifndef __TORRENT_METAINFO_H__
+#define __TORRENT_METAINFO_H__
 
 #define BOOST_VARIANT_NO_FULL_RECURSIVE_VARIANT_SUPPORT
     #include <boost/variant.hpp>
@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <string>
 
-namespace parsing
+namespace torrent
 {
     using MetaInfoInteger = long long;
     using MetaInfoString = std::string;
@@ -28,6 +28,6 @@ namespace parsing
 }
 
 // Debug utils
-std::ostream&   operator<<( std::ostream& os, const parsing::MetaInfo& metaInfo );
+std::ostream&   operator<<( std::ostream& os, const torrent::MetaInfo& metaInfo );
 
-#endif // ! __PARSING_METAINFO_H__
+#endif // ! __TORRENT_METAINFO_H__

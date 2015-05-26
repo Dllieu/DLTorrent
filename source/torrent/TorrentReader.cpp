@@ -13,7 +13,7 @@
 #include "BDecoder.h"
 
 namespace bfs = boost::filesystem;
-using namespace parsing;
+using namespace torrent;
 
 /*static*/ Tracker   TorrentReader::read( const bfs::path& torrent )
 {

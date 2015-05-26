@@ -6,7 +6,7 @@
 
 #include "BEncoder.h"
 
-using namespace parsing;
+using namespace torrent;
 
 namespace
 {

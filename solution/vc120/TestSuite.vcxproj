@@ -86,7 +86,7 @@
     <ClCompile Include="..\..\source\testsuite\TrackerTestSuite.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="Parsing.vcxproj">
+    <ProjectReference Include="Torrent.vcxproj">
       <Project>{ac6077b8-1e9b-4784-a6b3-8aea7cd74f5e}</Project>
     </ProjectReference>
     <ProjectReference Include="Utility.vcxproj">

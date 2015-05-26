@@ -2,18 +2,19 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __PARSING_BENCODER_H__
-#define __PARSING_BENCODER_H__
+#ifndef __UTILITY_IOSERVICE_H__
+#define __UTILITY_IOSERVICE_H__
 
-#include "MetaInfo.h"
+#include <boost/asio/io_service.hpp>
 
-namespace parsing
+#include "utility/ThreadSafeSingleton.h"
+
+namespace utility
 {
-    class BEncoder
+    class IoService : public boost::asio::io_service
+                    , public utility::ThreadSafeSingleton< IoService >
     {
-    public:
-        static std::string  encode( const MetaInfo& metainfo );
     };
 }
 
-#endif // ! __PARSING_BENCODER_H__
+#endif // ! __UTILITY_IOSERVICE_H__

@@ -4,10 +4,10 @@
 //--------------------------------------------------------------------------------
 #include <boost/test/unit_test.hpp>
 
-#include "parsing/BDecoder.h"
-#include "parsing/BEncoder.h"
+#include "torrent/BDecoder.h"
+#include "torrent/BEncoder.h"
 
-using namespace parsing;
+using namespace torrent;
 
 BOOST_AUTO_TEST_SUITE( EncoderTestSuite )
 

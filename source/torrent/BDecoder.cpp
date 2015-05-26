@@ -8,7 +8,7 @@
 #include "utility/Conversion.h"
 #include "utility/CustomException.h"
 
-using namespace parsing;
+using namespace torrent;
 
 namespace
 {

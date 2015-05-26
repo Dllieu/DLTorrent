@@ -8,7 +8,7 @@
 
 #include "MetaInfo.h"
 
-using namespace parsing;
+using namespace torrent;
 
 namespace
 {
@@ -64,7 +64,7 @@ namespace
     };
 }
 
-std::ostream&   operator<<( std::ostream& os, const parsing::MetaInfo& metaInfo )
+std::ostream&   operator<<( std::ostream& os, const torrent::MetaInfo& metaInfo )
 {
     boost::apply_visitor( OutputVisitor( os, 0 ), metaInfo );
     return os;

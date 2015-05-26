@@ -12,8 +12,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AC6077B8-1E9B-4784-A6B3-8AEA7CD74F5E}</ProjectGuid>
-    <RootNamespace>Parsing</RootNamespace>
-    <ProjectName>Parsing</ProjectName>
+    <RootNamespace>Torrent</RootNamespace>
+    <ProjectName>Torrent</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -69,24 +69,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\parsing\BDecoder.h" />
-    <ClInclude Include="..\..\source\parsing\BEncoder.h" />
-    <ClInclude Include="..\..\source\parsing\IoService.h" />
-    <ClInclude Include="..\..\source\parsing\Metainfo.h" />
-    <ClInclude Include="..\..\source\parsing\Peer.h" />
-    <ClInclude Include="..\..\source\parsing\Piece.h" />
-    <ClInclude Include="..\..\source\parsing\RootMetaInfo.h" />
-    <ClInclude Include="..\..\source\parsing\Tracker.h" />
-    <ClInclude Include="..\..\source\parsing\TorrentReader.h" />
+    <ClInclude Include="..\..\source\torrent\BDecoder.h" />
+    <ClInclude Include="..\..\source\torrent\BEncoder.h" />
+    <ClInclude Include="..\..\source\torrent\Metainfo.h" />
+    <ClInclude Include="..\..\source\torrent\Peer.h" />
+    <ClInclude Include="..\..\source\torrent\Piece.h" />
+    <ClInclude Include="..\..\source\torrent\RootMetaInfo.h" />
+    <ClInclude Include="..\..\source\torrent\Tracker.h" />
+    <ClInclude Include="..\..\source\torrent\TorrentReader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\parsing\BDecoder.cpp" />
-    <ClCompile Include="..\..\source\parsing\BEncoder.cpp" />
-    <ClCompile Include="..\..\source\parsing\MetaInfo.cpp" />
-    <ClCompile Include="..\..\source\parsing\Peer.cpp" />
-    <ClCompile Include="..\..\source\parsing\RootMetaInfo.cpp" />
-    <ClCompile Include="..\..\source\parsing\Tracker.cpp" />
-    <ClCompile Include="..\..\source\parsing\TorrentReader.cpp" />
+    <ClCompile Include="..\..\source\torrent\BDecoder.cpp" />
+    <ClCompile Include="..\..\source\torrent\BEncoder.cpp" />
+    <ClCompile Include="..\..\source\torrent\MetaInfo.cpp" />
+    <ClCompile Include="..\..\source\torrent\Peer.cpp" />
+    <ClCompile Include="..\..\source\torrent\RootMetaInfo.cpp" />
+    <ClCompile Include="..\..\source\torrent\Tracker.cpp" />
+    <ClCompile Include="..\..\source\torrent\TorrentReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Utility.vcxproj">

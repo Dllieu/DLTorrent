@@ -11,14 +11,14 @@
 #include <thread>
 #include <iostream>
 
-#include "parsing/TorrentReader.h"
-#include "parsing/Tracker.h"
-#include "parsing/RootMetaInfo.h"
-#include "parsing/IoService.h"
+#include "torrent/TorrentReader.h"
+#include "torrent/Tracker.h"
+#include "torrent/RootMetaInfo.h"
 
+#include "utility/IoService.h"
 #include "utility/DebugTools.h"
 
-using namespace parsing;
+using namespace torrent;
 using namespace boost::asio::ip;
 
 BOOST_AUTO_TEST_SUITE( TrackerTestSuite )
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_SUITE( TrackerTestSuite )
 BOOST_AUTO_TEST_CASE( TrackerTest )
 {
     // first step
-    //boost::asio::io_service::work work( parsing::IoService::instance() );
+    //boost::asio::io_service::work work( torrent::IoService::instance() );
 
 
     auto tracker = TorrentReader::read( "E:\\Downloads\\example.torrent" );
@@ -47,15 +47,15 @@ BOOST_AUTO_TEST_CASE( TrackerTest )
 
     std::cout << tracker.getRootMetaInfo().getPiece()[3] << std::endl;
 
-    //boost::asio::io_service::work work( parsing::IoService::instance() );
+    //boost::asio::io_service::work work( torrent::IoService::instance() );
     // hack until work work
-    //std::thread thread( [] { parsing::IoService::instance().run(); } );
+    //std::thread thread( [] { torrent::IoService::instance().run(); } );
 
     tracker.getRootMetaInfo().display();
     tracker.start();
 
-    //boost::asio::io_service::work work( parsing::IoService::instance() );
-    parsing::IoService::instance().run();
+    //boost::asio::io_service::work work( torrent::IoService::instance() );
+    utility::IoService::instance().run();
 
     for (;;)
     {

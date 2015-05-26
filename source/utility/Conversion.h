@@ -2,8 +2,8 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __PARSING_CONVERSION_H__
-#define __PARSING_CONVERSION_H__
+#ifndef __TORRENT_CONVERSION_H__
+#define __TORRENT_CONVERSION_H__
 
 #include <boost/utility/string_ref.hpp>
 
@@ -14,4 +14,4 @@ namespace utility
     long long       naive_ll_conversion( const boost::string_ref& stringRef );
 }
 
-#endif // ! __PARSING_CONVERSION_H__
+#endif // ! __TORRENT_CONVERSION_H__

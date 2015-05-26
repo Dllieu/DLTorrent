@@ -2,8 +2,8 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __PARSING_PIECES_H__
-#define __PARSING_PIECES_H__
+#ifndef __TORRENT_PIECES_H__
+#define __TORRENT_PIECES_H__
 
 #include <boost/utility/string_ref.hpp>
 
@@ -11,7 +11,7 @@
 
 #define SHA1_LENGTH 20
 
-namespace parsing
+namespace torrent
 {
     // N blocks == 1 Piece
     class Piece
@@ -55,4 +55,4 @@ namespace parsing
 
 #undef SHA1_LENGTH
 
-#endif /* ! __PARSING_PIECES_H__ */
+#endif /* ! __TORRENT_PIECES_H__ */

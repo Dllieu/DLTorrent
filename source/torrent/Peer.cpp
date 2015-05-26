@@ -11,10 +11,10 @@
 
 #include "utility/GenericBigEndianBuffer.h"
 
-#include "IoService.h"
+#include "utility/IoService.h"
 #include "Peer.h"
 
-using namespace parsing;
+using namespace torrent;
 
 // http://www.morehawes.co.uk/the-bittorrent-protocol
 
@@ -79,8 +79,8 @@ namespace
 struct Peer::PImpl
 {
     PImpl( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo )
-        : socket_( IoService::instance() )
-        , deadline_( IoService::instance() )
+        : socket_( utility::IoService::instance() )
+        , deadline_( utility::IoService::instance() )
         , endpoints_( endpoints )
         , hashInfo_( hashInfo )
     {}
