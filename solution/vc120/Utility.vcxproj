@@ -11,11 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\utility\Conversion.cpp" />
-    <ClCompile Include="..\..\source\utility\DebugTools.cpp" />
-    <ClCompile Include="..\..\source\utility\Sha1Encoder.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\source\utility\Conversion.h" />
     <ClInclude Include="..\..\source\utility\CustomException.h" />
     <ClInclude Include="..\..\source\utility\DebugTools.h" />
