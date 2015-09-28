@@ -2,12 +2,16 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
+
 #include <atomic>
 #include <iostream>
 #include <thread>
 
+#pragma warning( push )
+#pragma warning( disable : 4005 )
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/write.hpp>
+#pragma warning( pop )
 
 #include "utility/GenericBigEndianBuffer.h"
 #include "utility/Sha1Encoder.h"
@@ -353,9 +357,8 @@ Tracker::Tracker( RootMetaInfo&& root )
 {}
 
 Tracker::~Tracker() = default;
-// Default move constructors not supporter by VS2013
-//Tracker::Tracker( Tracker&& ) = default;
-//Tracker& Tracker::operator=( Tracker&& ) = default;
+Tracker::Tracker( Tracker&& ) = default;
+Tracker& Tracker::operator=( Tracker&& ) = default;
 
 const RootMetaInfo&     Tracker::getRootMetaInfo() const
 {

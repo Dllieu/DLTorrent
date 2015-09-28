@@ -1,0 +1,1 @@
+start %~dp0/solution/vc140/DLTorrent.sln

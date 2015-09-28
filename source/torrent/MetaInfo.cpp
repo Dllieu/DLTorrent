@@ -59,8 +59,8 @@ namespace
         }
 
     private:
-        mutable std::ostream&   os_;
-        size_t                  padding_;
+        std::ostream&   os_;
+        size_t          padding_;
     };
 }
 

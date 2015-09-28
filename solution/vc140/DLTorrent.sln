@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Torrent", "Torrent.vcxproj", "{AC6077B8-1E9B-4784-A6B3-8AEA7CD74F5E}"
 EndProject
@@ -11,7 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestSuite", "TestSuite.vcxp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Librairies", "Librairies", "{FF2F4486-0B36-44AC-8C2F-6D5FEB411C53}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utility", "Utility.vcxproj", "{132935DF-4207-4E26-9D96-110215AC7B85}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utility", "Utility.vcxproj", "{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,16 +43,18 @@ Global
 		{64C08395-A5C0-4EF5-97AA-0342FF479395}.Release|Win32.ActiveCfg = Release|x64
 		{64C08395-A5C0-4EF5-97AA-0342FF479395}.Release|x64.ActiveCfg = Release|x64
 		{64C08395-A5C0-4EF5-97AA-0342FF479395}.Release|x64.Build.0 = Release|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Debug|Mixed Platforms.Build.0 = Debug|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Debug|Win32.ActiveCfg = Debug|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Debug|x64.ActiveCfg = Debug|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Debug|x64.Build.0 = Debug|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Release|Mixed Platforms.ActiveCfg = Release|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Release|Mixed Platforms.Build.0 = Release|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Release|Win32.ActiveCfg = Release|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Release|x64.ActiveCfg = Release|x64
-		{132935DF-4207-4E26-9D96-110215AC7B85}.Release|x64.Build.0 = Release|x64
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Debug|Win32.Build.0 = Debug|Win32
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Debug|x64.ActiveCfg = Debug|x64
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Debug|x64.Build.0 = Debug|x64
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Release|Win32.ActiveCfg = Release|Win32
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Release|Win32.Build.0 = Release|Win32
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Release|x64.ActiveCfg = Release|x64
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +62,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{AC6077B8-1E9B-4784-A6B3-8AEA7CD74F5E} = {FF2F4486-0B36-44AC-8C2F-6D5FEB411C53}
 		{64C08395-A5C0-4EF5-97AA-0342FF479395} = {21A64B1E-25E4-4B3C-92F4-7F5433DB8D0E}
-		{132935DF-4207-4E26-9D96-110215AC7B85} = {FF2F4486-0B36-44AC-8C2F-6D5FEB411C53}
+		{8393EDFA-6BB9-4DE9-9830-A1D66654EE6C} = {FF2F4486-0B36-44AC-8C2F-6D5FEB411C53}
 	EndGlobalSection
 EndGlobal

@@ -49,7 +49,7 @@ namespace
         }
 
     private:
-        mutable std::stringstream&  ss_;
+        std::stringstream&  ss_;
     };
 }
 

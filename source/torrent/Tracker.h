@@ -12,12 +12,13 @@ namespace torrent
     class Tracker
     {
     public:
-        const RootMetaInfo&     getRootMetaInfo() const;
-
-        void                    start();
-
-        // Forward declaration of Pimpl
+        Tracker( Tracker&& tracker );
         ~Tracker();
+
+        Tracker&    operator=( Tracker&& tracker );
+
+        const RootMetaInfo&     getRootMetaInfo() const;
+        void                    start();
 
     private:
         friend class TorrentReader;

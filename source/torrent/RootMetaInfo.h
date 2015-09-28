@@ -5,7 +5,11 @@
 #ifndef __TORRENT_ROOTMETAINFO_H__
 #define __TORRENT_ROOTMETAINFO_H__
 
+#pragma warning( push )
+#pragma warning( disable : 4005 )
 #include <boost/asio/ip/udp.hpp>
+#pragma warning( pop )
+
 #include <array>
 #include <iostream>
 

@@ -3,8 +3,11 @@
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
 
+#pragma warning( push )
+#pragma warning( disable : 4005 )
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
+#pragma warning( pop )
 
 #include <thread>
 #include <iostream>

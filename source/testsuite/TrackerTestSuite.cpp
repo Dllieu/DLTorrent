@@ -4,7 +4,11 @@
 //--------------------------------------------------------------------------------
 #include <boost/test/unit_test.hpp>
 
+#pragma warning( push )
+#pragma warning( disable : 4005 )
 #include <boost/asio.hpp>
+#pragma warning( pop )
+
 #include <boost/utility/string_ref.hpp>
 #include <boost/uuid/sha1.hpp>
 
@@ -37,7 +41,6 @@ BOOST_AUTO_TEST_CASE( TrackerTest )
 {
     // first step
     //boost::asio::io_service::work work( torrent::IoService::instance() );
-
 
     auto tracker = TorrentReader::read( "E:\\Downloads\\example.torrent" );
 
