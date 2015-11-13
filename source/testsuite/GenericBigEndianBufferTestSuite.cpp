@@ -49,15 +49,12 @@ BOOST_AUTO_TEST_CASE( StringTestSuite )
     std::string s1( "hello" );
     buffer.writeString( s1, s1.size() );
 
-    std::string s2;
-    buffer.readString( s2, s1.size() ); // no need to take the '\0'
+    std::string s2 = buffer.readString( s1.size() ); // no need to take the '\0'
 
     BOOST_CHECK( s1 == s2 );
 
     buffer.writeString( "world", 50 );
-    buffer.readString( s2, 50 );
-
-    BOOST_CHECK( s2 == "world" );
+    BOOST_CHECK( buffer.readString( 50 ) == "world" );
 }
 
 BOOST_AUTO_TEST_SUITE_END() // GenericBigEndianBufferTestSuite

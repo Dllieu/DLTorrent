@@ -138,14 +138,19 @@ namespace utility
         }
 
         template < typename T, size_t N >
-        void    readArray( std::array< T, N >& a )
+        std::array< T, N >    readArray()
         {
-            for ( auto i = 0; i < a.size(); ++i )
-                operator>>( a[ i ] );
+            std::array< T, N > result;
+
+            for ( auto& e : result )
+                operator>>( e );
+
+            return result;
         }
 
-        void     readString( std::string& s, size_t sizeToRead )
+        std::string readString( size_t sizeToRead)
         {
+            std::string s;
             s.resize( sizeToRead );
 
             auto lastNonTerminationChar = static_cast< size_t >( 0 );
@@ -161,6 +166,7 @@ namespace utility
                 s.resize( effectiveSize ); // shrink
 
             s.shrink_to_fit();
+            return s;
         }
 
     private:

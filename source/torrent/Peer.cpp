@@ -43,7 +43,7 @@ namespace
 {
     size_t TEST_INDEX = 0;
 
-    enum class PeerMessage
+    enum class PeerMessage : char
     {
         KeepAlive = -1, // custom index : keep alive doesnt have an id in the protocol
         Choke,
@@ -110,52 +110,82 @@ struct Peer::PImpl
 #define EXIT_IF_INVALID_SOCKET( ERROR ) if ( exitAndConnectIfInvalidSocket( ERROR, false ) ) return
 #define EXIT_AND_CONNECT_IF_INVALID_SOCKET( ERROR ) if ( exitAndConnectIfInvalidSocket( ERROR, true ) ) return
 
+    // Details the pieces that peer currently has.
+    // <len=0005><id=4><piece index>
+    void    parse_have( std::size_t bytesTransferred )
+    {
+        auto index = static_cast< int >( bufferReceive_ );
+        std::cout << "parse_have piece index: " << index << std::endl;
+    }
+
+    // Sent immediately after handshaking. Optional, and only sent if client has pieces.
+    // Variable length, X is the length of bitfield. Payload represents pieces that have been successfully downloaded.
+    // <len=0001+X><id=5><bitfield>
+    void    parse_bitfield( std::size_t bytesTransferred )
+    {
+        auto bitfield = bufferReceive_.readString( bytesTransferred - 5 );
+        std::cout << "parse_bitfield: " << bitfield << std::endl;
+    }
+
+    // Hanshake
+    //<pstrlen><pstr><reserved><info_hash><peer_id>
+    //
+    // pstrlen:     string length of <pstr>, as a single raw byte
+    // pstr:        string identifier of the protocol
+    // reserved :   eight( 8 ) reserved bytes.A ll current implementations use all zeroes. Each bit in these bytes can be used to change the behavior of the protocol.
+    // info_hash :  20 - byte SHA1 hash of the info key in the metainfo file.This is the same info_hash that is transmitted in tracker requests.
+    // peer_id :    20 - byte string used as a unique ID for the client.This is usually the same peer_id that is transmitted in tracker requests( but not always e.g.an anonymity option in Azureus ).
+    void    prepare_handshake()
+    {
+        static std::string protocolUsed( "BitTorrent protocol" ); // todo ?
+        static size_t protocolUsedSize = protocolUsed.size();
+
+        bufferSend_ << static_cast< uint8_t >( protocolUsedSize );
+        bufferSend_.writeString( protocolUsed, protocolUsedSize );
+
+        bufferSend_ << static_cast< uint64_t >( 0 ); // reserved bytes
+
+        bufferSend_.writeArray( hashInfo_ );
+        bufferSend_.writeString( /*peerId_*/"-DL0101-zzzzz", 20 ); // todo
+    }
+
     // TODO : NE PAS LE METTRE ICI
+    // Hanshake
+    //<pstrlen><pstr><reserved><info_hash><peer_id>
+    //
+    // pstrlen:     string length of <pstr>, as a single raw byte
+    // pstr:        string identifier of the protocol
+    // reserved :   eight( 8 ) reserved bytes.A ll current implementations use all zeroes. Each bit in these bytes can be used to change the behavior of the protocol.
+    // info_hash :  20 - byte SHA1 hash of the info key in the metainfo file.This is the same info_hash that is transmitted in tracker requests.
+    // peer_id :    20 - byte string used as a unique ID for the client.This is usually the same peer_id that is transmitted in tracker requests( but not always e.g.an anonymity option in Azureus ).
     void    parse_handshake( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
     {
         EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
-        if ( bytesTransferred < 68 )
+        if ( bytesTransferred < 49 )
         {
             std::cout << "UNEXPECTED SIZE: " << bytesTransferred << std::endl;
+            std::cout << "HANDSHAKE KO" << std::endl;
             deadline_.expires_from_now( boost::posix_time::seconds( 2 ) );
             socket_.async_read_some( boost::asio::buffer( bufferReceive_.getDataForWriting(), bufferReceive_.capacity() ), [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { parse_handshake( errorCode, bytesTransferred ); } );
             return;
         }
 
         bufferReceive_.updateDataWritten( bytesTransferred );
-        std::cout << "read succeed" << std::endl;
 
-        std::string protocolUsed;
-        auto n = static_cast< char >( bufferReceive_ );
-        bufferReceive_.readString( protocolUsed, n );
+        auto protocolUsedSize = static_cast< uint8_t >( bufferReceive_ );
+        std::string protocolUsed = bufferReceive_.readString( protocolUsedSize );
+        auto reserved_bytes = static_cast< uint64_t >( bufferReceive_ );
+
+        auto hash_info = bufferReceive_.readArray< char, 20 >();
+        std::string peerId = bufferReceive_.readString( 20 );
+
+        std::cout << "HANDSHAKE OK" << std::endl;
         std::cout << "Peer protocol: " << protocolUsed << std::endl;
-
-        auto useless = static_cast< uint64_t >( bufferReceive_ );
-
-        std::array< char, 20 > hash;
-        bufferReceive_.readArray( hash );
-
-
-        std::string peerId;
-        bufferReceive_.readString( peerId, 20 );
         std::cout << "Peer id: " << peerId << std::endl;
 
         // continue process hjere -> actually create a valid peer at that point -> give him the socket
-        start_leeching();
-    }
-
-    void    prepare_handshake()
-    {
-        // todo
-        std::string protocolUsed( "BitTorrent protocol" );
-
-        bufferSend_ << static_cast< char >( protocolUsed.size() );
-        bufferSend_.writeString( protocolUsed, protocolUsed.size() );
-
-        bufferSend_ << static_cast< uint64_t >( 0 ); // reserved bytes
-
-        bufferSend_.writeArray( hashInfo_ );
-        bufferSend_.writeString( /*peerId_*/"-DL0101-zzzzz", 20 ); // todo
+        //setupMessage( PeerMessage::BitField );
+        setupMessage( PeerMessage::Interested );
     }
 
     void    onConnect( const boost::system::error_code& errorCode, const bai::tcp::endpoint& endpoint )
@@ -168,22 +198,14 @@ struct Peer::PImpl
         bufferSend_.clear();
         bufferReceive_.clear();
 
+        // 1 - setup handshake
         prepare_handshake();
 
         deadline_.expires_from_now( boost::posix_time::seconds( 2 ) );
+        // 2 - wait for handshake answer
         socket_.async_read_some( boost::asio::buffer( bufferReceive_.getDataForWriting(), bufferReceive_.capacity() ), [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { parse_handshake( errorCode, bytesTransferred ); } );
-        /*boost::asio::async_read( socket_, boost::asio::buffer( bufferReceive_.getDataForWriting(), 68 ),
-                                 [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { parse_handshake( errorCode, bytesTransferred ); } );*/
+        // 3 - send the handshake of (1)
         setupAsyncWrite();
-    }
-
-    // TODO: put previous code somewhere else as it only concern the connection logic
-
-
-
-    void    start_leeching()
-    {
-        setupMessage( PeerMessage::KeepAlive );
     }
 
 
@@ -219,23 +241,38 @@ struct Peer::PImpl
     void    onAsyncReadResult( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
     {
         EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
-        bufferReceive_.updateDataWritten( bytesTransferred );
 
-        auto length = static_cast< int >( bufferReceive_ );
+        bufferReceive_.updateDataWritten( bytesTransferred );
+        auto length = static_cast< int >( bufferReceive_ ); // woops can receive length = -1
+        std::cout << "Message received length: " << length << std::endl;
         if ( ! length )
             parse_keep_alive();
-        else
+        else if ( length > 0 )
         {
             // TODO
             // https://github.com/mpetazzoni/ttorrent/blob/master/core/src/main/java/com/turn/ttorrent/client/peer/PeerExchange.java
-            auto messageType = static_cast< int >( bufferReceive_ );
-            std::cout << "Received message type: " << messageType << std::endl;
+            auto messageType = static_cast< uint8_t >( bufferReceive_ );
+            std::cout << "Received message type: " << +messageType << std::endl;
+
+            switch ( messageType )
+            {
+            case PeerMessage::Have:
+                parse_have( bytesTransferred );
+                break;
+
+            case PeerMessage::BitField:
+                parse_bitfield( bytesTransferred );
+                break;
+
+            default:
+                std::cout << "Received unknown message type: " << +messageType << std::endl;
+            }
         }
 
-        if ( bufferReceive_.size() > 0 )
-            onAsyncReadResult( errorCode, bufferReceive_.size() );
-        else
-            setupAsyncRead();
+        // if ( bufferReceive_.size() > 0 )
+        //     onAsyncReadResult( errorCode, bufferReceive_.size() );
+        // else
+        setupAsyncRead();
     }
 
     void    setupAsyncRead()
@@ -261,40 +298,58 @@ struct Peer::PImpl
         bufferSend_ << 0;
     }
 
+    // This enables a peer to block another peers request for data
+    // <len=0001><id=0>
     void    prepare_choke()
     {
         bufferSend_ << 1 << PeerMessage::Choke;
     }
 
+    // Unblock peer, and if they are still interested in the data, upload will begin.
+    // <len=0001><id=1>
     void    prepare_unchoke()
     {
         bufferSend_ << 1 << PeerMessage::Unchoke;
+        std::cout << "UNCHOKE" << std::endl;
     }
 
+    // A user is interested if a peer has the data they require.
+    // <len=0001><id=2>
     void    prepare_interested()
     {
         bufferSend_ << 1 << PeerMessage::Interested;
     }
 
+    // The peer does not have any data required.
+    // <len = 0001><id = 3>
     void    prepare_not_interested()
     {
         bufferSend_ << 1 << PeerMessage::NotInterested;
     }
 
+    // Details the pieces that peer currently has.
+    // <len=0005><id=4><piece index>
     void    prepare_have()
     {
         //bufferSend_ << 5 << PeerMessage::Have << /*piece index*/;
     }
 
+    // Sent immediately after handshaking. Optional, and only sent if client has pieces.
+    // Variable length, X is the length of bitfield. Payload represents pieces that have been successfully downloaded.
+    // <len=0001+X><id=5><bitfield>
     void    prepare_bitfield()
     {
         // The bitfield message may only be sent immediately after the handshaking sequence is completed, and before any other messages are sent. It is optional, and need not be sent if a client has no pieces.
         // The bitfield message is variable length, where X is the length of the bitfield.The payload is a bitfield representing the pieces that have been successfully downloaded.The high bit in the first byte corresponds to piece index 0. Bits that are cleared indicated a missing piece, and set bits indicate a valid and available piece.Spare bits at the end are set to zero.
         // Some clients( Deluge for example ) send bitfield with missing pieces even if it has all data.Then it sends rest of pieces as have messages.They are saying this helps against ISP filtering of BitTorrent protocol.It is called lazy bitfield.
         // A bitfield of the wrong length is considered an error.Clients should drop the connection if they receive bitfields that are not of the correct size, or if the bitfield has any of the spare bits set.
-        //bufferSend_ << ( 1 + ?? ) << PeerMessage::Bitfield << /*bitfield*/;
+
+        // only send if not 0
+        //bufferSend_ << 5 << PeerMessage::BitField << 0;
     }
 
+    // Fixed length, used to request a block of pieces. The payload contains integer values specifying the index, begin location and length
+    // <len=0013><id=6><index><begin><length>
     void    prepare_request()
     {
         // request: <len = 0013><id = 6><index><begin><length>
@@ -306,6 +361,8 @@ struct Peer::PImpl
         bufferSend_ << 13 << PeerMessage::Request << 1 << 0 << 16 * 1024/*length*/;//length should be 16 * 1024
     }
 
+    // Sent together with request messages. Fixed length, X is the length of the block. The payload contains integer values specifying the index, begin location and length.
+    // <len=0009+X><id=7><index><begin><block>
     void    prepare_piece()
     {
         // The piece message is variable length, where X is the length of the block.The payload contains the following information :
@@ -315,6 +372,8 @@ struct Peer::PImpl
         //bufferSend_ << ( 9 + X ) << PeerMessage::Piece << /*piece index*/ << /*begin*/ << /*block*/;
     }
 
+    // Fixed length, used to cancel block requests. payload is the same as ‘request’. Typically used during ‘end game’ mode.
+    // <len = 13><id = 8><index><begin><length>
     void    prepare_cancel()
     {
         //bufferSend_ << 13 << PeerMessage::Cancel << /*piece index*/ << /*begin*/ << /*length*/;
@@ -336,6 +395,14 @@ struct Peer::PImpl
 
             case PeerMessage::Request:
                 prepare_request();
+                break;
+
+            case PeerMessage::BitField:
+                prepare_bitfield();
+                break;
+
+            case PeerMessage::Interested:
+                prepare_interested();
                 break;
 
             default:

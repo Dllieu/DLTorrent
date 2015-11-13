@@ -270,8 +270,7 @@ struct Tracker::PImpl
         if ( buffer_.size() < 8 )
             return false;
 
-        std::string errorMessage;
-        buffer_.readString( errorMessage, 8 );
+        std::string errorMessage = buffer_.readString( 8 );
 
         std::cout << "Received error from Tracker: " << errorMessage << std::endl;
         return false;
