@@ -6,6 +6,7 @@ delivery
 ## Eclipse
 #################
 
+*.opendb
 *.pydevproject
 .project
 .metadata

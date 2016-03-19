@@ -1,0 +1,34 @@
+version: "1.40.{build}"
+
+#vc140
+os: Visual Studio 2015
+
+platform: 
+  - x64
+
+environment:
+  MSVC_DEFAULT_OPTIONS: ON
+  #boost_1_60_0 not available
+  BOOST_VERSION: boost_1_59_0
+
+configuration:
+  - Debug
+  - Release
+
+init:
+  - set BOOST_ROOT=C:\Libraries\%BOOST_VERSION%
+  - set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+  - cmd: msbuild /version
+  - cmd: set
+
+clone_folder: C:\projects\DLTorrent
+
+install:
+  - cmd: mklink /j C:\Projects\DLTorrent\dependencies\boost %BOOST_ROOT%
+
+build:
+  project: C:\Projects\DLTorrent\solution\vc140\DLTorrent.sln
+  parallel: true
+  verbosity: normal
+
+test: off
