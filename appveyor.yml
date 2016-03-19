@@ -19,7 +19,6 @@ init:
   - set BOOST_ROOT=C:\Libraries\%BOOST_VERSION%
   - set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
   - cmd: msbuild /version
-  - cmd: set
 
 clone_folder: C:\projects\DLTorrent
 
