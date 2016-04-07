@@ -7,7 +7,7 @@
 
 #include "utility/Sha1Encoder.h"
 #include "BEncoder.h"
-#include "RootMetaInfo.h"
+#include "Torrent.h"
 
 using namespace torrent;
 
@@ -57,13 +57,14 @@ namespace
     }
 }
 
-RootMetaInfo::RootMetaInfo( MetaInfoDictionary&& root )
+Torrent::Torrent( MetaInfoDictionary&& root )
     : root_( root )
     , announcers_( parse_endpoints_from_root_metainfo( boost::get< MetaInfoList >( root_.at( "announce-list" ) ) ) ) // also add "announce" as announce-list is optional
     , hashInfo_( utility::Sha1Encoder::instance().encode( BEncoder::encode( root_.at( "info" ) ) ) )
     , bytesToDownload_( parse_total_length( boost::get< MetaInfoDictionary >( root_.at( "info" ) ) ) )
-    , piece_( boost::get< MetaInfoInteger >( boost::get< MetaInfoDictionary >( root_.at( "info" ) ).at( "piece length" ) ),
-              boost::get< MetaInfoString >( boost::get< MetaInfoDictionary >( root_.at( "info" ) ).at( "pieces" ) ) )
+    , pieceInfo_( bytesToDownload_,
+                  boost::get< MetaInfoInteger >( boost::get< MetaInfoDictionary >( root_.at( "info" ) ).at( "piece length" ) ),
+                  boost::get< MetaInfoString >( boost::get< MetaInfoDictionary >( root_.at( "info" ) ).at( "pieces" ) ) )
 {
     // NOTHING
 }

@@ -15,15 +15,20 @@ namespace bai = boost::asio::ip;
 
 // TODO : when creating the peer, give him a valid socket, peer should only have the message communication
 // see https://github.com/mpetazzoni/ttorrent/blob/master/core/src/main/java/com/turn/ttorrent/client/peer/SharingPeer.java
-
 namespace torrent
 {
+    class PieceInfo;
+
+    // Should be PeerManager (worker thread on peers)
     class Peer
     {
     public:
-        Peer( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo );
+        Peer( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo, const PieceInfo& piece );
         // Forward declaration of Pimpl
         ~Peer();
+
+        Peer::Peer( Peer&& );
+        Peer& Peer::operator=( Peer&& );
 
         void    connect();
 

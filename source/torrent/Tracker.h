@@ -5,24 +5,27 @@
 #ifndef __TORRENT_TRACKER_H__
 #define __TORRENT_TRACKER_H__
 
-#include "RootMetaInfo.h"
+#pragma warning( push )
+#pragma warning( disable : 4005 )
+#include <boost/asio/ip/tcp.hpp>
+#pragma warning( pop )
 
 namespace torrent
 {
+    class Torrent;
+
+    // TODO: Announcer should be able to handle multiple torrent (i.e. for scrapping)
+    //       - here is a naive approache 1 announcer <-> 1 torrent (can't benefit from scrapping)
     class Tracker
     {
     public:
-        Tracker( Tracker&& tracker );
+        explicit Tracker();
         ~Tracker();
 
-        Tracker&    operator=( Tracker&& tracker );
+        Tracker( const Tracker & ) = delete;
+        Tracker&    operator=( const Tracker & ) = delete;
 
-        const RootMetaInfo&     getRootMetaInfo() const;
-        void                    start();
-
-    private:
-        friend class TorrentReader;
-        explicit Tracker( RootMetaInfo&& root );
+        const std::vector< boost::asio::ip::tcp::endpoint >&        peerEndpoints( const Torrent& torrent );
 
     private:
         struct PImpl;

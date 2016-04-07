@@ -9,5 +9,6 @@
     <ClInclude Include="..\..\source\utility\RandomGenerator.h" />
     <ClInclude Include="..\..\source\utility\Sha1Encoder.h" />
     <ClInclude Include="..\..\source\utility\ThreadSafeSingleton.h" />
+    <ClInclude Include="..\..\source\utility\TypeTraits.h" />
   </ItemGroup>
 </Project>

@@ -14,10 +14,12 @@
 
 namespace torrent
 {
-    using MetaInfoInteger = long long;
-    using MetaInfoString = std::string;
+    constexpr const size_t SHA1_LENGTH = 20;
 
     // handle binteger as a long long (at least 8 bytes) to handle large files (torrent for more than 4Gbytes)
+    using MetaInfoInteger       = uint64_t;
+    using MetaInfoString        = std::string;
+
     using MetaInfo              = boost::make_recursive_variant< MetaInfoInteger,
                                                                  MetaInfoString,
                                                                  std::vector< boost::recursive_variant_ >,

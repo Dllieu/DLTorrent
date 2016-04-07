@@ -9,6 +9,13 @@
 #include <boost/asio.hpp>
 #pragma warning( pop )
 
+#pragma warning( push )
+#pragma warning( disable : 4005 )
+#include <boost/asio/ip/udp.hpp>
+#include <boost/asio/write.hpp>
+#include <boost/asio/use_future.hpp>
+#pragma warning( pop )
+
 #include <boost/utility/string_ref.hpp>
 #include <boost/uuid/sha1.hpp>
 
@@ -17,10 +24,12 @@
 
 #include "torrent/TorrentReader.h"
 #include "torrent/Tracker.h"
-#include "torrent/RootMetaInfo.h"
+#include "torrent/Torrent.h"
+#include "torrent/Peer.h"
 
 #include "utility/IoService.h"
 #include "utility/DebugTools.h"
+#include "utility/Conversion.h"
 
 using namespace torrent;
 using namespace boost::asio::ip;
@@ -37,34 +46,36 @@ BOOST_AUTO_TEST_SUITE( TrackerTestSuite )
 
 // http://code.openhub.net/file?fid=0U90FtOiCf5VWmcp1aR3WJj0LN8&cid=AD3GsYPg8AU&s=&fp=395380&projSelected=true&fp=395380&projSelected=true#L0
 // example : http://stackoverflow.com/questions/22791021/bittorrent-client-getting-peer-list-from-trackers-python
+
+#include <boost/dynamic_bitset.hpp>
+
 BOOST_AUTO_TEST_CASE( TrackerTest )
 {
-    // first step
-    //boost::asio::io_service::work work( torrent::IoService::instance() );
-
-    auto tracker = TorrentReader::read( "E:\\Downloads\\example.torrent" );
-
-    // DEBUG Utils
-    std::string wiresharkFilter = utility::generate_wireshark_filter( tracker.getRootMetaInfo().getAnnouncers() );
-    // ! DEBUG Utils
-
-    std::cout << tracker.getRootMetaInfo().getPiece()[3] << std::endl;
-
-    //boost::asio::io_service::work work( torrent::IoService::instance() );
-    // hack until work work
-    //std::thread thread( [] { torrent::IoService::instance().run(); } );
-
-    tracker.getRootMetaInfo().display();
-    tracker.start();
-
-    //boost::asio::io_service::work work( torrent::IoService::instance() );
-    utility::IoService::instance().run();
-
-    for (;;)
+    std::atomic< bool > mustStop( false );
+    std::thread thread( [ &mustStop ]
     {
-        std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
-        std::cout << ".";
-    }
+        boost::asio::io_service::work work( utility::IoService::instance() );
+
+        while ( !mustStop )
+        {
+            std::cout << "-> utility::IoService::instance().run()" << std::endl;
+            utility::IoService::instance().run();
+        }
+    } );
+
+    auto torrent = TorrentReader::read( "E:\\Downloads\\example.torrent" );
+    Tracker tracker;
+
+    // Copy as we need non const...
+    auto peerEndPoints = tracker.peerEndpoints( torrent );
+    auto wiresharkDebug = utility::generate_wireshark_filter( peerEndPoints );
+
+    Peer peer( peerEndPoints, torrent.getHashInfo(), torrent.getPieceInfo() );
+    peer.connect();
+
+    mustStop = true;
+    utility::IoService::instance().stop();
+    thread.join();
 }
 
 BOOST_AUTO_TEST_SUITE_END() // ! TrackerTestSuite

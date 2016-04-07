@@ -25,4 +25,13 @@ BOOST_AUTO_TEST_CASE( NaiveLLTest )
     BOOST_CHECK( naive_ll_conversion( "--++--+-+5" ) == -5 );
 }
 
+BOOST_AUTO_TEST_CASE( BitsetToBytesTest )
+{
+    boost::dynamic_bitset<> bitset( std::string( "11000011100000001" ) );
+    auto v = bitset_to_bytes( bitset );
+    auto bitset2 = bytes_to_bitset( v, bitset.size() );
+
+    BOOST_CHECK( bitset == bitset2 );
+}
+
 BOOST_AUTO_TEST_SUITE_END() // ! ConversionTestSuite

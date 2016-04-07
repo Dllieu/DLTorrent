@@ -5,7 +5,7 @@ delivery
 #################
 ## Eclipse
 #################
-
+*.db
 *.opendb
 *.pydevproject
 .project

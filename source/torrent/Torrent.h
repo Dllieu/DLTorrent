@@ -2,8 +2,7 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __TORRENT_ROOTMETAINFO_H__
-#define __TORRENT_ROOTMETAINFO_H__
+#pragma once
 
 #pragma warning( push )
 #pragma warning( disable : 4005 )
@@ -14,16 +13,18 @@
 #include <iostream>
 
 #include "MetaInfo.h"
-#include "Piece.h"
+#include "PieceInfo.h"
 
 namespace bai = boost::asio::ip;
 
 namespace torrent
 {
-    class RootMetaInfo
+    class Torrent
     {
     public:
-        RootMetaInfo( MetaInfoDictionary&& root );
+        Torrent( MetaInfoDictionary&& root );
+        Torrent( Torrent&& ) = default;
+        Torrent&    operator=( Torrent&& ) = default;
 
         // Inlines
         void        display() const
@@ -31,7 +32,6 @@ namespace torrent
             std::cout << root_ << std::endl;
         }
 
-        
         const std::vector< bai::udp::endpoint >&    getAnnouncers() const
         {
             return announcers_;
@@ -47,9 +47,9 @@ namespace torrent
             return bytesToDownload_;
         }
 
-        const Piece&   getPiece() const
+        const PieceInfo&   getPieceInfo() const
         {
-            return piece_;
+            return pieceInfo_;
         }
 
     private:
@@ -58,8 +58,6 @@ namespace torrent
         const std::vector< bai::udp::endpoint >   announcers_;
         const std::array< char, 20 >              hashInfo_;
         const uint64_t                            bytesToDownload_;
-        const Piece                               piece_;
+        const PieceInfo                           pieceInfo_;
     };
 }
-
-#endif // ! __TORRENT_ROOTMETAINFO_H__

@@ -38,7 +38,7 @@ namespace
         void    operator()( const std::string& v ) const
         {
             if ( std::find_if( v.begin(), v.end(), [] ( unsigned char c ) { return ! isprint( c ); } ) != v.end() )
-                apply_padding( os_, padding_ ) << "(binary...)" << std::endl;
+                apply_padding( os_, padding_ ) << "(binary... size: " << v.size() << ")" << std::endl;
             else
                 apply_padding( os_, padding_ ) << v << std::endl;
         }

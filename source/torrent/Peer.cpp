@@ -7,124 +7,350 @@
 #pragma warning( disable : 4005 )
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/asio/use_future.hpp>
 #pragma warning( pop )
+
+#include <boost/dynamic_bitset.hpp>
 
 #include <thread>
 #include <iostream>
+#include <unordered_set>
 
 #include "utility/GenericBigEndianBuffer.h"
-
 #include "utility/IoService.h"
+#include "utility/TypeTraits.h"
+#include "utility/Conversion.h"
+
 #include "Peer.h"
+#include "PieceInfo.h"
 
 using namespace torrent;
-
-// http://www.morehawes.co.uk/the-bittorrent-protocol
-
-// http://stackoverflow.com/questions/26683500/continuously-streaming-data-with-boostasio-without-closing-socket
-
-// who do the connect :
-// try_connect_peer : https://github.com/libtorrent/libtorrent/blob/d11376bbe3bae1d620bfba7f2d0d319bca556c90/src/session_impl.cpp
-// implemented in torrent.cpp -> policy.connect_one_peer
-
-// actual peer
-// https://github.com/libtorrent/libtorrent/blob/d11376bbe3bae1d620bfba7f2d0d319bca556c90/include/libtorrent/policy.hpp
-//https://github.com/libtorrent/libtorrent/blob/d11376bbe3bae1d620bfba7f2d0d319bca556c90/src/bt_peer_connection.cpp
-// https://github.com/libtorrent/libtorrent/blob/master/src/peer_connection.cpp
-
-// interessant :
-// - 1817 : peer_connection::incoming_piece(
-// 
-
-
-// TODO : update endpoints once in a while (when we have tried all endpoint -> notify Tracker to request more)
 
 namespace
 {
     size_t TEST_INDEX = 0;
 
+    enum class Timeout : int
+    {
+        Connect = 2,
+        Handshake = 4,
+        PostHandshake = 10,
+    };
+
     enum class PeerMessage : char
     {
-        KeepAlive = -1, // custom index : keep alive doesnt have an id in the protocol
-        Choke,
-        Unchoke,
-        Interested,
-        NotInterested,
-        Have,
-        BitField,
-        Request,
-        Piece,
+        Choke = 0,
+        Unchoke = 1,
+        Interested = 2, // send
+        NotInterested = 3,
+        Have = 4,
+        BitField = 5, // send / receive
+        Request = 6,
+        Piece = 7, // send
     };
+
+    // faire map de functor (qui prenne un BufferIn)
 
     template < size_t N >
     utility::GenericBigEndianBuffer< N >&     operator<<( utility::GenericBigEndianBuffer< N >& buffer, PeerMessage peerMessage )
     {
-        buffer << static_cast< int >( peerMessage );
+        buffer << utility::enum_cast( peerMessage );
         return buffer;
     }
 }
 
+namespace
+{
+    template < typename T >
+    bool    ensure_valid_future( std::future< T >& future, int timeout )
+    {
+       return future.wait_for( std::chrono::seconds( timeout ) ) == std::future_status::ready;
+    }
+}
+
+#define SHOW_DEBUG true
 
 // One more thing to note about message passing – there seems to be no guarantee that messages will come in discrete packets containing only a single entire message.
 // This means that you might end up with a long bytestring from a peer containing several messages, or you might end up with a bytestring
 // from a peer that only has the length prefix for a message and the rest of the message will arrive in a later packet.
 // You will need some way to deal with this inconsistency.The length prefix can be very helpful here to determine how much data you expect to have.
-
-
-// connection Logic : OK (single peer)
-// message logic : ko (only one way here to the peer)
-
-// Design from http://www.boost.org/doc/libs/1_45_0/doc/html/boost_asio/example/timeouts/async_tcp_client.cpp
-// TODO : decouper :
-//        1 - find vliad endpoint process : loop et fais un connect
-//                                        - si connect succeed -> try handshake, si handshake succeed : OK
-//        2 - start peer process
 struct Peer::PImpl
 {
-    PImpl( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo )
+    // TODO : update endpoints once in a while (when we have tried all endpoint -> notify Tracker to request more)
+    PImpl( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo, const PieceInfo& pieceInfo )
         : socket_( utility::IoService::instance() )
-        , deadline_( utility::IoService::instance() )
         , endpoints_( endpoints )
         , hashInfo_( hashInfo )
-    {}
+        , pieceInfo_( pieceInfo )
+        , bitField_( pieceInfo.size() ) //!!!!!
+        , isChocked_( true )
+        , isInterested_( false )
+        , timeout_( 5 )
+    {
+        // NOTHING
+    }
+
+    // todo : factorize
+    bool    connect( const bai::tcp::endpoint& endpoint )
+    {
+        socket_.open( bai::tcp::v4() );
+        if ( ! ::ensure_valid_future( socket_.async_connect( endpoint, boost::asio::use_future ), 2 ) )
+            return false;
+
+        if ( SHOW_DEBUG )
+            std::cout << "******* Connected to " << endpoint << "\n";
+        resetState();
+        prepareHandshake(); // all prepare_ ... will send message or update internal infos
+
+        return read()
+            && parseHandshake();
+    }
+
+    bool    send()
+    {
+        if ( SHOW_DEBUG )
+        std::cout << "=== SENDING " << bufferSend_.size() << " bytes " << std::endl;
+        if ( ! ::ensure_valid_future( boost::asio::async_write( socket_, boost::asio::buffer( bufferSend_.getDataForReading(), bufferSend_.size() ), boost::asio::use_future ), timeout_ ) )
+            return false;
+
+        if ( SHOW_DEBUG )
+        std::cout << "=== SENDING OK" << std::endl;
+
+        bufferSend_.clear();
+        return true;
+    }
+
+    bool    read()
+    {
+        if ( SHOW_DEBUG )
+        std::cout << "-> READ" << std::endl;
+        // unknown size
+        //auto receiveFuture = boost::asio::async_read( socket_, boost::asio::buffer( bufferReceive_.getDataForWritingTESTTTTTTTTTTTTTTTTTTTTTTTT(), bufferReceive_.capacity() ), boost::asio::use_future );
+        auto receiveFuture = socket_.async_read_some( boost::asio::buffer( bufferReceive_.getDataForWritingTESTTTTTTTTTTTTTTTTTTTTTTTT(), bufferReceive_.capacity() ), boost::asio::use_future );
+        if ( ! ::ensure_valid_future( receiveFuture, timeout_ ) )
+            return false;
+
+        try
+        {
+            auto s = receiveFuture.get();
+            bufferReceive_.updateDataWritten( s );
+            if ( SHOW_DEBUG )
+            std::cout << "%%%%%%%%%%%%%%%%%%%%%%%% READ " << s << " bytes" << std::endl;
+        }
+        catch ( const boost::system::system_error& error )
+        {
+            if ( SHOW_DEBUG )
+            std::cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%% CRASH (async_read_some): " << error.what() << std::endl;
+            return false;
+        }
+        return true;
+    }
 
     // try all endpoint on the vector -> should do a connect + handshake! then start peer processing
-    void    try_endpoint()
+    void    try_endpoints()
     {
         if ( endpoints_.empty() || TEST_INDEX >= endpoints_.size() )
         {
+            if ( SHOW_DEBUG )
             std::cout << "No endpoint to connect to..." << std::endl;
             return;
         }
 
-        deadline_.async_wait( [ this ] ( const boost::system::error_code& errorCode ) { checkDeadline( errorCode ); } );
-
         // do a queue et pop ?
         auto endpoint = endpoints_[ TEST_INDEX++ ];
+        resetState();
+
         std::cout << "Trying " << endpoint << "...\n";
-        deadline_.expires_from_now( boost::posix_time::seconds( 2 ) );
-        socket_.async_connect( endpoint, [ this, endpoint ] ( const boost::system::error_code& errorCode ) { onConnect( errorCode, endpoint ); } );
+        
+        if ( !connect( endpoint ) )
+        {
+            socket_.close();
+            try_endpoints();
+            return;
+        }
+
+        // TODO:
+        // (OK) 1 - send proper bitfield (format got us to be rejected)
+        // (OK) 2 - ensure we receive bitfield from host (with proper size)
+        // (OK) 3 - send interest
+        // (OK) 4 - receive unchocked
+        // (OK) 5 - send request
+        // (KO) 6 - receive piece (we close the connection before receiving the data chunk i.e. 16 * 1024, raise the timeout to 5 mins in unchoke handling message ??)
+        // ... - request piece
+        
+        timeout_ = 60;
+        prepareBitfield();
+
+        for ( ;; )
+        {
+            while (parsePackets())
+                ;
+
+            if ( !read() )
+                break;
+        }
+
+        socket_.close();
+        try_endpoints();
+    }
+
+    // Slow method
+    void    prepareBitfield()
+    {
+        auto v = utility::bitset_to_bytes( bitField_ );
+        bufferSend_ << ( v.size() + 1 ) << utility::enum_cast( PeerMessage::BitField );
+        bufferSend_.writeDynamicArray( v );
+
+        if ( SHOW_DEBUG )
+            std::cout << "PREPARE BITFIELD (size: " << v.size() << ")" << std::endl;
+
+        send();
+    }
+
+    bool    parsePackets()
+    {
+        if ( bufferReceive_.size() < sizeof( int ) )
+        {
+            if ( bufferReceive_.empty() )
+                bufferReceive_.clear();
+            else
+                std::cout << "Message less than a int" << std::endl;
+
+            return false;
+        }
+
+        auto length = static_cast< int >( bufferReceive_ );
+        if ( length > bufferReceive_.size() )
+        {
+            std::cout << "Message is truncated (waiting for next packet): " << bufferReceive_.size() << " / " << length << std::endl;
+            // reset index
+            bufferReceive_.rewindReadIndex( sizeof( int ) );
+            return false;
+        }
+
+        if ( length < 0 )
+        {
+            std::cout << "invalid message length" << std::endl;
+            socket_.close();
+            return false;
+        }
+
+        if ( !length )
+        {
+            std::cout << "----------- RECEIVE KEEP ALIVE ---------------------" << std::endl;
+            prepareKeepAlive(); // should only send one every 60 second
+            return true;
+        }
+
+        // TODO
+        // https://github.com/mpetazzoni/ttorrent/blob/master/core/src/main/java/com/turn/ttorrent/client/peer/PeerExchange.java
+        auto messageType = static_cast< char >( bufferReceive_ );
+        static int nbTimeReceive = 1;
+        --length;
+        //std::cout << "@@@@@@@@@@@@@@ Received message type: " << +messageType << " (size: " << length << " | number " << nbTimeReceive++ << ")" << std::endl;
+
+        switch ( messageType )
+        {
+            case PeerMessage::Have:
+                parseHave();
+                break;
+
+            case PeerMessage::Choke:
+                parseChoke();
+                break;
+
+            case PeerMessage::Unchoke:
+                parseUnchoke();
+                break;
+
+            case PeerMessage::BitField:
+                return parseBitfield( length );
+
+            default:
+                bufferReceive_.skipBytes( length );
+                std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Received unknown message type: " << +messageType << std::endl;
+        }
+
+        return true;
     }
 
 
 #define EXIT_IF_INVALID_SOCKET( ERROR ) if ( exitAndConnectIfInvalidSocket( ERROR, false ) ) return
 #define EXIT_AND_CONNECT_IF_INVALID_SOCKET( ERROR ) if ( exitAndConnectIfInvalidSocket( ERROR, true ) ) return
 
+    // This enables a peer to block another peers request for data
+    // <len=0001><id=0>
+    void    parseChoke()
+    {
+        std::cout << "CHOKE received ######################################################################" << std::endl;
+        isChocked_ = true;
+        socket_.close();// ?????
+    }
+
+    // Unblock peer, and if they are still interested in the data, upload will begin.
+    // <len=0001><id=1>
+    void    parseUnchoke()
+    {
+        std::cout << "UNCHOKE received %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
+        isChocked_ = false;
+        timeout_ = 5 * 60;
+
+        if ( isInterested_ )
+        {
+            auto firstPiece = peerBitField_.find_first();
+            if ( firstPiece != boost::dynamic_bitset<>::npos )
+                prepare_request( (int) firstPiece, 0 ); // in theory must wait for server that he unchoke us, but never receive such message
+        }
+    }
+
+    // Handle updates in piece availability from a peer's HAVE message. When this happens, we need to mark that piece as available from the peer.
     // Details the pieces that peer currently has.
     // <len=0005><id=4><piece index>
-    void    parse_have( std::size_t bytesTransferred )
+    void    parseHave()
     {
         auto index = static_cast< int >( bufferReceive_ );
-        std::cout << "parse_have piece index: " << index << std::endl;
+        havePieceIndex_.insert( index );
+
+        if ( SHOW_DEBUG )
+        std::cout << "RECEIVED HAVE piece index: " << index << std::endl;
     }
 
     // Sent immediately after handshaking. Optional, and only sent if client has pieces.
     // Variable length, X is the length of bitfield. Payload represents pieces that have been successfully downloaded.
     // <len=0001+X><id=5><bitfield>
-    void    parse_bitfield( std::size_t bytesTransferred )
+    bool    parseBitfield(size_t length)
     {
-        auto bitfield = bufferReceive_.readString( bytesTransferred - 5 );
-        std::cout << "parse_bitfield: " << bitfield << std::endl;
+        auto expectedLength = static_cast< int >( bitField_.size() / 8 + ( bitField_.size() % 8 != 0 ? 1 : 0 ) );
+        if ( length != expectedLength )
+        {
+            socket_.close();
+            return false;
+        }
+
+        // todo: get bufferReceive_ in buffer -> process by size anyway -> put in Convertion then add test
+        boost::dynamic_bitset<> peerBitset( bitField_.size() );
+        for ( auto i = 0; i < peerBitset.size(); i += 8 )
+        {
+            auto c = static_cast< char >( bufferReceive_ );
+            for ( auto j = 0; j < 8 && i + j < peerBitset.size(); ++j )
+                peerBitset.set( i + j, ( c >> ( 7 - i ) ) & 1 );
+        }
+
+        peerBitField_ = std::move( peerBitset );
+
+        std::string buffer;
+        boost::to_string( peerBitField_, buffer );
+        //if ( SHOW_DEBUG )
+        std::cout << "RECEIVED BITFIELD: " << buffer << std::endl;
+
+        // just send interested + request piece needed
+        auto firstPiece = peerBitField_.find_first();
+        if ( firstPiece != boost::dynamic_bitset<>::npos )
+            prepareInterested();
+        else
+            prepareNotInterested();
+
+        return true;
     }
 
     // Hanshake
@@ -135,7 +361,7 @@ struct Peer::PImpl
     // reserved :   eight( 8 ) reserved bytes.A ll current implementations use all zeroes. Each bit in these bytes can be used to change the behavior of the protocol.
     // info_hash :  20 - byte SHA1 hash of the info key in the metainfo file.This is the same info_hash that is transmitted in tracker requests.
     // peer_id :    20 - byte string used as a unique ID for the client.This is usually the same peer_id that is transmitted in tracker requests( but not always e.g.an anonymity option in Azureus ).
-    void    prepare_handshake()
+    void    prepareHandshake()
     {
         static std::string protocolUsed( "BitTorrent protocol" ); // todo ?
         static size_t protocolUsedSize = protocolUsed.size();
@@ -146,7 +372,10 @@ struct Peer::PImpl
         bufferSend_ << static_cast< uint64_t >( 0 ); // reserved bytes
 
         bufferSend_.writeArray( hashInfo_ );
-        bufferSend_.writeString( /*peerId_*/"-DL0101-zzzzz", 20 ); // todo
+        bufferSend_.writeString( /*peerId_*/"-DL0501-zzzzz", 20 ); // todo
+
+        std::cout << "PREPARE HANDSHAKE" << std::endl;
+        send();
     }
 
     // TODO : NE PAS LE METTRE ICI
@@ -158,134 +387,55 @@ struct Peer::PImpl
     // reserved :   eight( 8 ) reserved bytes.A ll current implementations use all zeroes. Each bit in these bytes can be used to change the behavior of the protocol.
     // info_hash :  20 - byte SHA1 hash of the info key in the metainfo file.This is the same info_hash that is transmitted in tracker requests.
     // peer_id :    20 - byte string used as a unique ID for the client.This is usually the same peer_id that is transmitted in tracker requests( but not always e.g.an anonymity option in Azureus ).
-    void    parse_handshake( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
+    bool    parseHandshake()
     {
-        EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
-        if ( bytesTransferred < 49 )
+        if ( bufferReceive_.size() < 49 )
         {
-            std::cout << "UNEXPECTED SIZE: " << bytesTransferred << std::endl;
+            std::cout << "UNEXPECTED SIZE: " << bufferReceive_.size() << std::endl;
             std::cout << "HANDSHAKE KO" << std::endl;
-            deadline_.expires_from_now( boost::posix_time::seconds( 2 ) );
-            socket_.async_read_some( boost::asio::buffer( bufferReceive_.getDataForWriting(), bufferReceive_.capacity() ), [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { parse_handshake( errorCode, bytesTransferred ); } );
-            return;
+            return false;
         }
-
-        bufferReceive_.updateDataWritten( bytesTransferred );
 
         auto protocolUsedSize = static_cast< uint8_t >( bufferReceive_ );
         std::string protocolUsed = bufferReceive_.readString( protocolUsedSize );
-        auto reserved_bytes = static_cast< uint64_t >( bufferReceive_ );
+        auto reservedBytes = static_cast< uint64_t >( bufferReceive_ );
 
-        auto hash_info = bufferReceive_.readArray< char, 20 >();
+        auto hashInfo = bufferReceive_.readArray< char, 20 >();
         std::string peerId = bufferReceive_.readString( 20 );
 
+        auto isCorrectHash = hashInfo_ == hashInfo;
+
         std::cout << "HANDSHAKE OK" << std::endl;
+        std::cout << "Hash is: " << (isCorrectHash ? "OK" : "KO") << std::endl;
         std::cout << "Peer protocol: " << protocolUsed << std::endl;
         std::cout << "Peer id: " << peerId << std::endl;
 
-        // continue process hjere -> actually create a valid peer at that point -> give him the socket
-        //setupMessage( PeerMessage::BitField );
-        setupMessage( PeerMessage::Interested );
-    }
-
-    void    onConnect( const boost::system::error_code& errorCode, const bai::tcp::endpoint& endpoint )
-    {
-        EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
-
-        std::cout << "Connected to " << endpoint << "\n";
-
-        // Try handshake
-        bufferSend_.clear();
-        bufferReceive_.clear();
-
-        // 1 - setup handshake
-        prepare_handshake();
-
-        deadline_.expires_from_now( boost::posix_time::seconds( 2 ) );
-        // 2 - wait for handshake answer
-        socket_.async_read_some( boost::asio::buffer( bufferReceive_.getDataForWriting(), bufferReceive_.capacity() ), [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { parse_handshake( errorCode, bytesTransferred ); } );
-        // 3 - send the handshake of (1)
-        setupAsyncWrite();
-    }
-
-
-    bool    exitAndConnectIfInvalidSocket( const boost::system::error_code& errorCode, bool mustConnect )
-    {
-        if ( socket_.is_open() && ! errorCode )
+        if ( !isCorrectHash )
             return false;
 
-        if ( errorCode )
-        {
-            std::cout << "error: " << errorCode.message() << std::endl;
-            socket_.close();
-        }
-        else
-            std::cout << "action timed out\n" << std::endl;
-
-        if ( mustConnect )
-            try_endpoint();
-
         return true;
+        // continue process hjere -> actually create a valid peer at that point -> give him the socket
+        //setupAsyncRead();
     }
 
-    void    setupAsyncWrite()
+    void    resetState()
     {
-        boost::asio::async_write( socket_, boost::asio::buffer( bufferSend_.getDataForReading(), bufferSend_.size() ),
-                                  [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
-        {
-            EXIT_IF_INVALID_SOCKET( errorCode );
-            std::cout << "async write succeed" << std::endl;
-        } );
+        timeout_ = 5;
+        isChocked_ = true;
+        isInterested_ = false;
+        havePieceIndex_.clear();
+
+        bufferSend_.clear();
+        bufferReceive_.clear();
     }
 
-    void    onAsyncReadResult( const boost::system::error_code& errorCode, std::size_t bytesTransferred )
-    {
-        EXIT_AND_CONNECT_IF_INVALID_SOCKET( errorCode );
-
-        bufferReceive_.updateDataWritten( bytesTransferred );
-        auto length = static_cast< int >( bufferReceive_ ); // woops can receive length = -1
-        std::cout << "Message received length: " << length << std::endl;
-        if ( ! length )
-            parse_keep_alive();
-        else if ( length > 0 )
-        {
-            // TODO
-            // https://github.com/mpetazzoni/ttorrent/blob/master/core/src/main/java/com/turn/ttorrent/client/peer/PeerExchange.java
-            auto messageType = static_cast< uint8_t >( bufferReceive_ );
-            std::cout << "Received message type: " << +messageType << std::endl;
-
-            switch ( messageType )
-            {
-            case PeerMessage::Have:
-                parse_have( bytesTransferred );
-                break;
-
-            case PeerMessage::BitField:
-                parse_bitfield( bytesTransferred );
-                break;
-
-            default:
-                std::cout << "Received unknown message type: " << +messageType << std::endl;
-            }
-        }
-
-        // if ( bufferReceive_.size() > 0 )
-        //     onAsyncReadResult( errorCode, bufferReceive_.size() );
-        // else
-        setupAsyncRead();
-    }
-
-    void    setupAsyncRead()
-    {
-        deadline_.expires_from_now( boost::posix_time::seconds( 10 ) );
-        socket_.async_read_some( boost::asio::buffer( bufferReceive_.getDataForWriting(), bufferReceive_.capacity() ),
-                                 [ this ] ( const boost::system::error_code& errorCode, std::size_t bytesTransferred ) { onAsyncReadResult( errorCode, bytesTransferred ); } );
-    }
-
-    void    parse_keep_alive()
+    bool    parseKeepAlive()
     {
         std::cout << "keep alive ok" << std::endl;
-        //setupMessage( PeerMessage::Request );
+
+        bufferSend_.clear();
+        prepareKeepAlive();
+        return send();
     }
 
     void    parse_request()
@@ -293,64 +443,60 @@ struct Peer::PImpl
 //        std::cout << "***** request result, with " << bytesTransferred << " bytes" << std::endl;
     }
 
-    void    prepare_keep_alive()
+    void    prepareKeepAlive()
     {
+        std::cout << "SETUP KEEP ALIVE" << std::endl;
         bufferSend_ << 0;
+
+        send();
     }
 
     // This enables a peer to block another peers request for data
     // <len=0001><id=0>
-    void    prepare_choke()
+    void    prepareChoke()
     {
-        bufferSend_ << 1 << PeerMessage::Choke;
+        bufferSend_ << 1 << utility::enum_cast( PeerMessage::Choke );
+        std::cout << "SETUP CHOKE" << std::endl;
+
+        send();
     }
 
     // Unblock peer, and if they are still interested in the data, upload will begin.
     // <len=0001><id=1>
-    void    prepare_unchoke()
+    void    prepareUnchoke()
     {
-        bufferSend_ << 1 << PeerMessage::Unchoke;
-        std::cout << "UNCHOKE" << std::endl;
+        bufferSend_ << 1 << utility::enum_cast( PeerMessage::Unchoke );
+        std::cout << "SETUP UNCHOKE" << std::endl;
+
+        send();
     }
 
     // A user is interested if a peer has the data they require.
     // <len=0001><id=2>
-    void    prepare_interested()
+    void    prepareInterested()
     {
-        bufferSend_ << 1 << PeerMessage::Interested;
+        std::cout << "SETUP INTERESTED" << std::endl;
+
+        isInterested_ = true;
+        bufferSend_ << 1 << utility::enum_cast( PeerMessage::Interested );
+
+        send();
     }
 
     // The peer does not have any data required.
     // <len = 0001><id = 3>
-    void    prepare_not_interested()
+    void    prepareNotInterested()
     {
-        bufferSend_ << 1 << PeerMessage::NotInterested;
-    }
+        std::cout << "SETUP NOT INTERESTED" << std::endl;
+        bufferSend_ << 1 << utility::enum_cast( PeerMessage::NotInterested );
 
-    // Details the pieces that peer currently has.
-    // <len=0005><id=4><piece index>
-    void    prepare_have()
-    {
-        //bufferSend_ << 5 << PeerMessage::Have << /*piece index*/;
-    }
-
-    // Sent immediately after handshaking. Optional, and only sent if client has pieces.
-    // Variable length, X is the length of bitfield. Payload represents pieces that have been successfully downloaded.
-    // <len=0001+X><id=5><bitfield>
-    void    prepare_bitfield()
-    {
-        // The bitfield message may only be sent immediately after the handshaking sequence is completed, and before any other messages are sent. It is optional, and need not be sent if a client has no pieces.
-        // The bitfield message is variable length, where X is the length of the bitfield.The payload is a bitfield representing the pieces that have been successfully downloaded.The high bit in the first byte corresponds to piece index 0. Bits that are cleared indicated a missing piece, and set bits indicate a valid and available piece.Spare bits at the end are set to zero.
-        // Some clients( Deluge for example ) send bitfield with missing pieces even if it has all data.Then it sends rest of pieces as have messages.They are saying this helps against ISP filtering of BitTorrent protocol.It is called lazy bitfield.
-        // A bitfield of the wrong length is considered an error.Clients should drop the connection if they receive bitfields that are not of the correct size, or if the bitfield has any of the spare bits set.
-
-        // only send if not 0
-        //bufferSend_ << 5 << PeerMessage::BitField << 0;
+        // stop connec?
+        socket_.close();
     }
 
     // Fixed length, used to request a block of pieces. The payload contains integer values specifying the index, begin location and length
     // <len=0013><id=6><index><begin><length>
-    void    prepare_request()
+    void    prepare_request(int index, int byteOffset)
     {
         // request: <len = 0013><id = 6><index><begin><length>
         // The request message is fixed length, and is used to request a block.The payload contains the following information :
@@ -358,7 +504,10 @@ struct Peer::PImpl
         // begin : integer specifying the zero - based byte offset within the piece
         // length : integer specifying the requested length.
 
-        bufferSend_ << 13 << PeerMessage::Request << 1 << 0 << 16 * 1024/*length*/;//length should be 16 * 1024
+        bufferSend_ << 13 << utility::enum_cast( PeerMessage::Request ) << index << byteOffset << 16 * 1024/*length*/;//length should be 16 * 1024
+        std::cout << "!!!!!!! PREPARE REQUEST: piece " << index << std::endl;
+
+        send();
     }
 
     // Sent together with request messages. Fixed length, X is the length of the block. The payload contains integer values specifying the index, begin location and length.
@@ -379,73 +528,26 @@ struct Peer::PImpl
         //bufferSend_ << 13 << PeerMessage::Cancel << /*piece index*/ << /*begin*/ << /*length*/;
     }
 
-    #undef PREPARE_ASYNC_READ
-
-    void    setupMessage( PeerMessage peerMessage )
-    {
-        bufferSend_.clear();
-        bufferReceive_.clear();
-
-        switch ( peerMessage )
-        {
-            case PeerMessage::KeepAlive:
-                //std::this_thread::sleep_for( std::chrono::seconds( 10 ) ); // test purpose (gros probleme si on bourrine, ca coupe a partir d'un moment, toutes les autres actions vont fail)
-                prepare_keep_alive();
-                break;
-
-            case PeerMessage::Request:
-                prepare_request();
-                break;
-
-            case PeerMessage::BitField:
-                prepare_bitfield();
-                break;
-
-            case PeerMessage::Interested:
-                prepare_interested();
-                break;
-
-            default:
-                std::cout << "Unhandled PeerMessage: " << static_cast< int >( peerMessage ) << std::endl;
-                return;
-        }
-
-        setupAsyncRead();
-        setupAsyncWrite();
-    }
-
-    void    checkDeadline( const boost::system::error_code& errorCode )
-    {
-        // Check whether the deadline has passed. We compare the deadline against
-        // the current time since a new asynchronous operation may have moved the
-        // deadline before this actor had a chance to run.
-        if ( deadline_.expires_at() > boost::asio::deadline_timer::traits_type::now() )
-        {
-            // Put the actor back to sleep.
-            deadline_.async_wait( [ this ] ( const boost::system::error_code& errorCode ) { checkDeadline( errorCode ); } );
-            return;
-        }
-
-        // The deadline has passed. The socket is closed so that any outstanding
-        // asynchronous operations are cancelled.
-        socket_.close();
-
-        // There is no longer an active deadline. The expiry is set to positive
-        // infinity so that the actor takes no action until a new deadline is set.
-        deadline_.expires_at( boost::posix_time::pos_infin );
-    }
-
 
 public:
     const std::array< char, 20 >                hashInfo_;
 
 private:
     bai::tcp::socket                            socket_;
-    boost::asio::deadline_timer                 deadline_;
     std::vector< bai::tcp::endpoint >           endpoints_;
+    const PieceInfo&                            pieceInfo_;
+
+    bool                                        isChocked_;
+    bool                                        isInterested_;
+    int                                         timeout_;
+
+    std::unordered_set<int>                     havePieceIndex_; // todo: remove
+    boost::dynamic_bitset<>                     bitField_;
+    boost::dynamic_bitset<>                     peerBitField_;
+
 
     // must reduce size corresponding of the max size message
-    utility::GenericBigEndianBuffer< 2048 >     bufferReceive_;
+    utility::GenericBigEndianBuffer< 32 * 1024 >     bufferReceive_; // need at least 16 * 1024 to handle one chunk
     utility::GenericBigEndianBuffer< 2048 >     bufferSend_;
 };
 
@@ -456,18 +558,17 @@ private:
 // check like http://codereview.stackexchange.com/questions/3770/bittorrent-peer-protocol-messages
 
 // pour test, on prend une lsite ip/port, on les bourre tous
-Peer::Peer( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo )
-    : pimpl_( std::make_unique< PImpl >( endpoints, hashInfo ) )
+Peer::Peer( const std::vector< bai::tcp::endpoint >& endpoints, const std::array< char, 20 >& hashInfo, const PieceInfo& pieceInfo )
+    : pimpl_( std::make_unique< PImpl >( endpoints, hashInfo, pieceInfo ) )
 {
     // NOTHING
 }
 
 Peer::~Peer() = default;
-// Default move constructors not supporter by VS2013
-//Peer::Peer( Peer&& ) = default;
-//Peer& Peer::operator=( Peer&& ) = default;
+Peer::Peer( Peer&& ) = default;
+Peer& Peer::operator=( Peer&& ) = default;
 
 void    Peer::connect()
 {
-    pimpl_->try_endpoint();
+    pimpl_->try_endpoints();
 }

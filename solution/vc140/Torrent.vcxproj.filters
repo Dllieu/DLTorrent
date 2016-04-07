@@ -4,13 +4,13 @@
     <Filter Include="Parsing">
       <UniqueIdentifier>{b0b75c26-958a-426a-a0e7-52a797f2ad9b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tracker">
+      <UniqueIdentifier>{59867012-220f-457c-be4d-21ad5eeb7278}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\torrent\Piece.h" />
-    <ClInclude Include="..\..\source\torrent\RootMetaInfo.h" />
     <ClInclude Include="..\..\source\torrent\Metainfo.h" />
     <ClInclude Include="..\..\source\torrent\Peer.h" />
-    <ClInclude Include="..\..\source\torrent\Tracker.h" />
     <ClInclude Include="..\..\source\torrent\TorrentReader.h" />
     <ClInclude Include="..\..\source\torrent\BDecoder.h">
       <Filter>Parsing</Filter>
@@ -18,18 +18,33 @@
     <ClInclude Include="..\..\source\torrent\BEncoder.h">
       <Filter>Parsing</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\torrent\PieceInfo.h" />
+    <ClInclude Include="..\..\source\torrent\TorrentManager.h" />
+    <ClInclude Include="..\..\source\torrent\Torrent.h" />
+    <ClInclude Include="..\..\source\torrent\Tracker.h">
+      <Filter>Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\torrent\TrackerSocket.h">
+      <Filter>Tracker</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\torrent\TorrentReader.cpp" />
-    <ClCompile Include="..\..\source\torrent\RootMetaInfo.cpp" />
     <ClCompile Include="..\..\source\torrent\MetaInfo.cpp" />
     <ClCompile Include="..\..\source\torrent\Peer.cpp" />
-    <ClCompile Include="..\..\source\torrent\Tracker.cpp" />
     <ClCompile Include="..\..\source\torrent\BDecoder.cpp">
       <Filter>Parsing</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\torrent\BEncoder.cpp">
       <Filter>Parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\torrent\Torrent.cpp" />
+    <ClCompile Include="..\..\source\torrent\TorrentManager.cpp" />
+    <ClCompile Include="..\..\source\torrent\Tracker.cpp">
+      <Filter>Tracker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\torrent\TrackerSocket.cpp">
+      <Filter>Tracker</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

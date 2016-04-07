@@ -8,9 +8,12 @@
 #include <boost/utility/string_ref.hpp>
 #include <boost/endian/conversion.hpp>
 #include <array>
+#include <vector>
 
 namespace utility
 {
+    // TODO : make it circular
+
     // Bufferize and store literals in big endian
     // - operator>> will retrieve a specific literal in native endian
     // - getData... will retrieve the underlying data in big endian
@@ -23,27 +26,43 @@ namespace utility
             , readIndex_( 0 )
         {}
 
-        size_t  capacity() const
+        constexpr size_t  capacity() const
         {
             return N;
         }
 
+        // ugly and usafe! (todo fix min / max / see if refactoring needed
+        void        rewindReadIndex( size_t offset )
+        {
+            readIndex_ -= offset;
+        }
+
         bool        empty() const
         {
-            return writeIndex_ == 0;
+            return writeIndex_ == readIndex_;
         }
 
         size_t      size() const
         {
+            return writeIndex_ - readIndex_;
+        }
+
+        size_t      getWriteIndex() const
+        {
             return writeIndex_;
         }
 
+        void        skipBytes( size_t bytesToSkip )
+        {
+            readIndex_ += bytesToSkip;
+        }
+
+        // todo make this operation cheaper
         void    clear()
         {
-            if ( empty() )
-                return;
+            if ( writeIndex_ == 0 )
+                buffer_.fill( 0 );
 
-            buffer_.fill( 0 );
             clearIndex();
         }
 
@@ -60,10 +79,18 @@ namespace utility
             return buffer_.data();
         }
 
+        char*           getDataForWritingTESTTTTTTTTTTTTTTTTTTTTTTTT()
+        {
+            if (readIndex_ == writeIndex_)
+                return getDataForWriting();
+
+            return buffer_.data() + writeIndex_;
+        }
+
         // very ugly
         void            updateDataWritten( size_t dataWritten )
         {
-            writeIndex_ = dataWritten;
+            writeIndex_ += dataWritten;
         }
 
         template < typename T >
@@ -92,6 +119,13 @@ namespace utility
         {
             for ( auto i = 0; i < a.size(); ++i )
                 operator<<( a[ i ] );
+        }
+
+        template < typename T >
+        void    writeDynamicArray( const std::vector< T >& v )
+        {
+            for ( auto i = 0; i < v.size(); ++i )
+                operator<<( v[ i ] );
         }
 
         void    writeString( const boost::string_ref& s, size_t sizeToWrite )
@@ -148,6 +182,17 @@ namespace utility
             return result;
         }
 
+        template < typename T >
+        std::vector< T >    readDynamicArray( size_t size )
+        {
+            std::vector< T > result( size );
+
+            for ( auto& e : result )
+                operator >> ( e );
+
+            return result;
+        }
+
         std::string readString( size_t sizeToRead)
         {
             std::string s;
@@ -197,8 +242,8 @@ namespace utility
             result = *reinterpret_cast< T* >( buffer_.data() + readIndex_ );
             readIndex_ += sizeof( T );
 
-            if ( readIndex_ == writeIndex_ )
-                clear();
+            //if ( readIndex_ == writeIndex_ )
+            //    clear();
 
             return result;
         }

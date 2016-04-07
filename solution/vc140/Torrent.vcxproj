@@ -73,19 +73,23 @@
     <ClInclude Include="..\..\source\torrent\BEncoder.h" />
     <ClInclude Include="..\..\source\torrent\Metainfo.h" />
     <ClInclude Include="..\..\source\torrent\Peer.h" />
-    <ClInclude Include="..\..\source\torrent\Piece.h" />
-    <ClInclude Include="..\..\source\torrent\RootMetaInfo.h" />
+    <ClInclude Include="..\..\source\torrent\PieceInfo.h" />
+    <ClInclude Include="..\..\source\torrent\Torrent.h" />
+    <ClInclude Include="..\..\source\torrent\TorrentManager.h" />
     <ClInclude Include="..\..\source\torrent\Tracker.h" />
     <ClInclude Include="..\..\source\torrent\TorrentReader.h" />
+    <ClInclude Include="..\..\source\torrent\TrackerSocket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\torrent\BDecoder.cpp" />
     <ClCompile Include="..\..\source\torrent\BEncoder.cpp" />
     <ClCompile Include="..\..\source\torrent\MetaInfo.cpp" />
     <ClCompile Include="..\..\source\torrent\Peer.cpp" />
-    <ClCompile Include="..\..\source\torrent\RootMetaInfo.cpp" />
+    <ClCompile Include="..\..\source\torrent\Torrent.cpp" />
+    <ClCompile Include="..\..\source\torrent\TorrentManager.cpp" />
     <ClCompile Include="..\..\source\torrent\Tracker.cpp" />
     <ClCompile Include="..\..\source\torrent\TorrentReader.cpp" />
+    <ClCompile Include="..\..\source\torrent\TrackerSocket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -11,12 +11,12 @@
 
 namespace torrent
 {
-    class Tracker;
+    class Torrent;
 
     class TorrentReader
     {
     public:
-        static Tracker   read( const boost::filesystem::path& filepath );
+        static Torrent   read( const boost::filesystem::path& filepath );
     };
 }
 

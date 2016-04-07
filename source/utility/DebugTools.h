@@ -5,13 +5,13 @@
 #ifndef __UTILITY_DEBUGTOOLS_H__
 #define __UTILITY_DEBUGTOOLS_H__
 
-#include <boost/asio/ip/udp.hpp>
 #include <vector>
 #include <sstream>
 
 namespace utility
 {
-    inline std::string     generate_wireshark_filter( const std::vector< boost::asio::ip::udp::endpoint >& endpoints )
+    template < typename ENDPOINT >
+    inline std::string     generate_wireshark_filter( const std::vector< ENDPOINT >& endpoints )
     {
         std::stringstream wiresharkSs;
 
