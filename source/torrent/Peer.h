@@ -4,7 +4,10 @@
 //--------------------------------------------------------------------------------
 #pragma once
 
+#pragma warning( push )
+#pragma warning( disable : 4005 )
 #include <boost/asio/ip/tcp.hpp>
+#pragma warning( pop )
 
 #include <vector>
 #include <array>
