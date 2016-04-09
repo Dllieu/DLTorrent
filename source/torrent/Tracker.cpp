@@ -15,6 +15,7 @@
 #include "TrackerSocket.h"
 
 using namespace torrent;
+namespace bai = boost::asio::ip;
 
 namespace
 {
@@ -202,7 +203,7 @@ struct Tracker::PImpl
 
         int ipAddress = 0;
         short port = 0;
-        while ( buffer.size() > 48 /*sizeof(ip) + sizeof(port)*/ )
+        while ( buffer.size() > 48 /*sizeof(ip) + sizeof(port)*/ ) // ???????
         {
             buffer >> ipAddress >> port;
 

@@ -7,16 +7,14 @@
 
 #include "utility/GenericBigEndianBuffer.h"
 
-namespace bai = boost::asio::ip;
-
 namespace torrent
 {
     struct TrackerSocket
     {
         using BufferType = utility::GenericBigEndianBuffer< 2048 >;
 
-        TrackerSocket( bai::udp::endpoint& endpoint );
-        ~TrackerSocket();
+        TrackerSocket( boost::asio::ip::udp::endpoint& endpoint );
+        ~TrackerSocket() = default;
 
         BufferType&     buffer()
         {
@@ -33,9 +31,9 @@ namespace torrent
         bool    receive();
 
     private:
-        bai::udp::socket        socket_;
-        bai::udp::endpoint&     endpoint_;
+        boost::asio::ip::udp::socket        socket_;
+        boost::asio::ip::udp::endpoint&     endpoint_;
 
-        BufferType              buffer_;
+        BufferType                          buffer_;
     };
 }

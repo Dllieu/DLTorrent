@@ -10,6 +10,7 @@
 #include "Torrent.h"
 
 using namespace torrent;
+namespace bai = boost::asio::ip;
 
 namespace
 {

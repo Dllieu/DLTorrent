@@ -73,9 +73,10 @@
     <ClInclude Include="..\..\source\torrent\BEncoder.h" />
     <ClInclude Include="..\..\source\torrent\Metainfo.h" />
     <ClInclude Include="..\..\source\torrent\Peer.h" />
+    <ClInclude Include="..\..\source\torrent\PeerManager.h" />
+    <ClInclude Include="..\..\source\torrent\PeerSocket.h" />
     <ClInclude Include="..\..\source\torrent\PieceInfo.h" />
     <ClInclude Include="..\..\source\torrent\Torrent.h" />
-    <ClInclude Include="..\..\source\torrent\TorrentManager.h" />
     <ClInclude Include="..\..\source\torrent\Tracker.h" />
     <ClInclude Include="..\..\source\torrent\TorrentReader.h" />
     <ClInclude Include="..\..\source\torrent\TrackerSocket.h" />
@@ -85,8 +86,9 @@
     <ClCompile Include="..\..\source\torrent\BEncoder.cpp" />
     <ClCompile Include="..\..\source\torrent\MetaInfo.cpp" />
     <ClCompile Include="..\..\source\torrent\Peer.cpp" />
+    <ClCompile Include="..\..\source\torrent\PeerManager.cpp" />
+    <ClCompile Include="..\..\source\torrent\PeerSocket.cpp" />
     <ClCompile Include="..\..\source\torrent\Torrent.cpp" />
-    <ClCompile Include="..\..\source\torrent\TorrentManager.cpp" />
     <ClCompile Include="..\..\source\torrent\Tracker.cpp" />
     <ClCompile Include="..\..\source\torrent\TorrentReader.cpp" />
     <ClCompile Include="..\..\source\torrent\TrackerSocket.cpp" />

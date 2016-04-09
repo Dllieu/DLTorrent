@@ -11,17 +11,13 @@
 #include "utility/IoService.h"
 
 using namespace torrent;
+namespace bai = boost::asio::ip;
 
 TrackerSocket::TrackerSocket( bai::udp::endpoint& endpoint )
     : socket_( utility::IoService::instance() )
     , endpoint_( endpoint )
 {
     // NOTHING
-}
-
-TrackerSocket::~TrackerSocket()
-{
-    socket_.close();
 }
 
 namespace

@@ -7,10 +7,14 @@
     <Filter Include="Tracker">
       <UniqueIdentifier>{59867012-220f-457c-be4d-21ad5eeb7278}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Peer">
+      <UniqueIdentifier>{1caa3c20-e1b9-4fa2-8a1f-ce4e480a096c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TorrentInfo">
+      <UniqueIdentifier>{f0eca2c3-0c9e-47a1-a899-a93caf513491}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\torrent\Metainfo.h" />
-    <ClInclude Include="..\..\source\torrent\Peer.h" />
     <ClInclude Include="..\..\source\torrent\TorrentReader.h" />
     <ClInclude Include="..\..\source\torrent\BDecoder.h">
       <Filter>Parsing</Filter>
@@ -18,8 +22,6 @@
     <ClInclude Include="..\..\source\torrent\BEncoder.h">
       <Filter>Parsing</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\torrent\PieceInfo.h" />
-    <ClInclude Include="..\..\source\torrent\TorrentManager.h" />
     <ClInclude Include="..\..\source\torrent\Torrent.h" />
     <ClInclude Include="..\..\source\torrent\Tracker.h">
       <Filter>Tracker</Filter>
@@ -27,11 +29,24 @@
     <ClInclude Include="..\..\source\torrent\TrackerSocket.h">
       <Filter>Tracker</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\torrent\Peer.h">
+      <Filter>Peer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\torrent\Metainfo.h">
+      <Filter>TorrentInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\torrent\PieceInfo.h">
+      <Filter>TorrentInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\torrent\PeerSocket.h">
+      <Filter>Peer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\torrent\PeerManager.h">
+      <Filter>Peer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\torrent\TorrentReader.cpp" />
-    <ClCompile Include="..\..\source\torrent\MetaInfo.cpp" />
-    <ClCompile Include="..\..\source\torrent\Peer.cpp" />
     <ClCompile Include="..\..\source\torrent\BDecoder.cpp">
       <Filter>Parsing</Filter>
     </ClCompile>
@@ -39,12 +54,23 @@
       <Filter>Parsing</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\torrent\Torrent.cpp" />
-    <ClCompile Include="..\..\source\torrent\TorrentManager.cpp" />
     <ClCompile Include="..\..\source\torrent\Tracker.cpp">
       <Filter>Tracker</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\torrent\TrackerSocket.cpp">
       <Filter>Tracker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\torrent\Peer.cpp">
+      <Filter>Peer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\torrent\MetaInfo.cpp">
+      <Filter>TorrentInfo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\torrent\PeerSocket.cpp">
+      <Filter>Peer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\torrent\PeerManager.cpp">
+      <Filter>Peer</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

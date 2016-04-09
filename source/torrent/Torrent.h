@@ -15,8 +15,6 @@
 #include "MetaInfo.h"
 #include "PieceInfo.h"
 
-namespace bai = boost::asio::ip;
-
 namespace torrent
 {
     class Torrent
@@ -32,7 +30,7 @@ namespace torrent
             std::cout << root_ << std::endl;
         }
 
-        const std::vector< bai::udp::endpoint >&    getAnnouncers() const
+        const std::vector< boost::asio::ip::udp::endpoint >&    getAnnouncers() const
         {
             return announcers_;
         }
@@ -53,11 +51,11 @@ namespace torrent
         }
 
     private:
-        const MetaInfoDictionary                  root_;
+        const MetaInfoDictionary                                root_;
 
-        const std::vector< bai::udp::endpoint >   announcers_;
-        const std::array< char, 20 >              hashInfo_;
-        const uint64_t                            bytesToDownload_;
-        const PieceInfo                           pieceInfo_;
+        const std::vector< boost::asio::ip::udp::endpoint >     announcers_;
+        const std::array< char, 20 >                            hashInfo_;
+        const uint64_t                                          bytesToDownload_;
+        const PieceInfo                                         pieceInfo_;
     };
 }
