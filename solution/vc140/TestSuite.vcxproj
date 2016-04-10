@@ -83,11 +83,15 @@
     <ClCompile Include="..\..\source\testsuite\EncoderTestSuite.cpp" />
     <ClCompile Include="..\..\source\testsuite\GenericBigEndianBufferTestSuite.cpp" />
     <ClCompile Include="..\..\source\testsuite\Initializer.cpp" />
-    <ClCompile Include="..\..\source\testsuite\TrackerTestSuite.cpp" />
+    <ClCompile Include="..\..\source\testsuite\LoggerTestSuite.cpp" />
+    <ClCompile Include="..\..\source\testsuite\PeerTestSuite.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Torrent.vcxproj">
       <Project>{ac6077b8-1e9b-4784-a6b3-8aea7cd74f5e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Utility.vcxproj">
+      <Project>{8393edfa-6bb9-4de9-9830-a1d66654ee6c}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

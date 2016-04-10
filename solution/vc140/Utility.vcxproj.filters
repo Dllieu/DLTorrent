@@ -10,5 +10,9 @@
     <ClInclude Include="..\..\source\utility\Sha1Encoder.h" />
     <ClInclude Include="..\..\source\utility\ThreadSafeSingleton.h" />
     <ClInclude Include="..\..\source\utility\TypeTraits.h" />
+    <ClInclude Include="..\..\source\utility\Logger.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\utility\Logger.cpp" />
   </ItemGroup>
 </Project>

@@ -2,8 +2,7 @@
 // (C) Copyright 2014-2015 Stephane Molina, All rights reserved.
 // See https://github.com/Dllieu for updates, documentation, and revision history.
 //--------------------------------------------------------------------------------
-#ifndef __TORRENT_TRACKER_H__
-#define __TORRENT_TRACKER_H__
+#pragma once
 
 #pragma warning( push )
 #pragma warning( disable : 4005 )
@@ -32,5 +31,3 @@ namespace torrent
         std::unique_ptr< PImpl >    pimpl_;
     };
 }
-
-#endif // ! __TORRENT_TRACKER_H__

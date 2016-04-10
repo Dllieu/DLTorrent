@@ -6,12 +6,12 @@
 #include "Peer.h"
 
 #include <boost/dynamic_bitset.hpp>
-
-#include <iostream>
 #include <unordered_set>
 
 #include "utility/TypeTraits.h"
 #include "utility/Conversion.h"
+#include "utility/Logger.h"
+
 #include "PieceInfo.h"
 #include "PeerSocket.h"
 
@@ -46,7 +46,6 @@ struct Peer::PImpl
         // NOTHING
     }
 
-    // try all endpoint on the vector -> should do a connect + handshake! then start peer processing
     void    start()
     {
         isChocked_ = true;
@@ -115,7 +114,7 @@ struct Peer::PImpl
         sendBuffer.writeArray( hashInfo_ );
         sendBuffer.writeString( /*peerId_*/"-DL0501-zzzzz", 20 ); // todo
 
-        std::cout << "PREPARE HANDSHAKE" << std::endl;
+        LOG_INFO << "PREPARE HANDSHAKE";
 
         return socket_.send();
     }
@@ -141,26 +140,20 @@ struct Peer::PImpl
 
         auto isCorrectHash = hashInfo_ == hashInfo;
 
-        std::cout << "HANDSHAKE OK" << std::endl;
-        std::cout << "Hash is: " << ( isCorrectHash ? "OK" : "KO" ) << std::endl;
-        std::cout << "Peer protocol: " << protocolUsed << std::endl;
-        std::cout << "Peer id: " << peerId << std::endl;
+        LOG_INFO << "Hash is: " << ( isCorrectHash ? "OK" : "KO" );
+        LOG_INFO << "Peer protocol: " << protocolUsed;
+        LOG_INFO << "Peer id: " << peerId;
 
         return isCorrectHash;
     }
 
-    // todo: split in two func: - ensure minimum size + forward handle
     bool    handleReceivedMessage()
     {
         auto length = static_cast< int >( socket_.receiveBuffer() );
         if ( !length )
-        {
-            std::cout << "----------- RECEIVE KEEP ALIVE ---------------------" << std::endl;
             return handleKeepAlive(); // should only send one every 60 second
-        }
 
         auto messageType = static_cast< char >( socket_.receiveBuffer() );
-        static int nbTimeReceive = 1;
         --length;
         
         switch ( messageType )
@@ -179,7 +172,7 @@ struct Peer::PImpl
 
             default:
                 socket_.receiveBuffer().skipBytes( length );
-                std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Received unknown message type: " << +messageType << std::endl;
+                LOG_WARNING << "$ Received unknown message type: " << +messageType;
                 return true;
         }
     }
@@ -188,7 +181,7 @@ struct Peer::PImpl
     bool    sendBitfield()
     {
         auto v = utility::bitset_to_bytes( bitField_ );
-        std::cout << "PREPARE BITFIELD (size: " << v.size() << ")" << std::endl;
+        LOG_DEBUG << "PREPARE BITFIELD (size: " << v.size() << ")";
 
         socket_.sendBuffer() << ( v.size() + 1 ) << utility::enum_cast( PeerMessage::BitField );
         socket_.sendBuffer().writeDynamicArray( v );
@@ -200,7 +193,7 @@ struct Peer::PImpl
     // <len=0001><id=0>
     bool    handleChoke()
     {
-        std::cout << "CHOKE received ######################################################################" << std::endl;
+        LOG_INFO << "CHOKE received ######################################################################";
         isChocked_ = true;
         return false;
     }
@@ -209,8 +202,7 @@ struct Peer::PImpl
     // <len=0001><id=1>
     bool    handleUnchoke()
     {
-        std::cout << "UNCHOKE received %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
-
+        LOG_INFO << "UNCHOKE received %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
         if ( !isInterested_ )
             return false;
 
@@ -233,7 +225,7 @@ struct Peer::PImpl
         auto index = static_cast< int >( socket_.receiveBuffer() );
         havePieceIndex_.insert( index );
 
-        std::cout << "RECEIVED HAVE piece index: " << index << std::endl;
+        LOG_INFO << "RECEIVED HAVE piece index: " << index;
         return true;
     }
 
@@ -259,7 +251,7 @@ struct Peer::PImpl
 
         std::string buffer;
         boost::to_string( peerBitField_, buffer );
-        std::cout << "RECEIVED BITFIELD: " << buffer << std::endl;
+        LOG_INFO << "RECEIVED BITFIELD: " << buffer;
 
         // just send interested + request piece needed
         auto firstPiece = peerBitField_.find_first();
@@ -271,13 +263,13 @@ struct Peer::PImpl
 
     bool    handleKeepAlive()
     {
-        std::cout << "keep alive ok" << std::endl;
+        LOG_DEBUG << "keep alive ok";
         return sendKeepAlive();
     }
 
     bool    sendKeepAlive()
     {
-        std::cout << "SETUP KEEP ALIVE" << std::endl;
+        LOG_INFO << "SETUP KEEP ALIVE";
         socket_.sendBuffer() << 0;
         return socket_.send();
     }
@@ -286,7 +278,7 @@ struct Peer::PImpl
     // <len=0001><id=2>
     bool    sendInterested()
     {
-        std::cout << "SETUP INTERESTED" << std::endl;
+        LOG_DEBUG << "SETUP INTERESTED";
 
         isInterested_ = true;
         socket_.sendBuffer() << 1 << utility::enum_cast( PeerMessage::Interested );
@@ -305,7 +297,7 @@ struct Peer::PImpl
         // length : integer specifying the requested length.
 
         socket_.sendBuffer() << 13 << utility::enum_cast( PeerMessage::Request ) << index << byteOffset << 16 * 1024/*length*/;//length should be 16 * 1024
-        std::cout << "!!!!!!! PREPARE REQUEST: piece " << index << std::endl;
+        LOG_INFO << "!!!!!!! PREPARE REQUEST: piece " << index;
 
         return socket_.send();
     }

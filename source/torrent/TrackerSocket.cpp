@@ -6,9 +6,8 @@
 #include <boost/asio/use_future.hpp>
 #pragma warning( pop )
 
-#include <iostream>
-
 #include "utility/IoService.h"
+#include "utility/Logger.h"
 
 using namespace torrent;
 namespace bai = boost::asio::ip;
@@ -28,7 +27,7 @@ namespace
         if ( future.wait_for( std::chrono::seconds( 2 ) ) == std::future_status::ready )
             return true;
 
-        std::cout << "TracketSocket timeout: " << errorMessage << std::endl;
+        LOG_ERROR << "TracketSocket timeout: " << errorMessage;
         return false;
     }
 }
@@ -64,7 +63,7 @@ bool    TrackerSocket::receive()
     }
     catch ( const boost::system::system_error& error )
     {
-        std::cout << "Couldn't receive from announcer: " << error.what() << std::endl;
+        LOG_ERROR << "Couldn't receive from announcer: " << error.what();
         return false;
     }
     return true;

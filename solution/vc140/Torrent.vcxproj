@@ -93,6 +93,11 @@
     <ClCompile Include="..\..\source\torrent\TorrentReader.cpp" />
     <ClCompile Include="..\..\source\torrent\TrackerSocket.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Utility.vcxproj">
+      <Project>{8393edfa-6bb9-4de9-9830-a1d66654ee6c}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

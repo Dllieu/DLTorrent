@@ -6,10 +6,10 @@
 #include <boost/asio/use_future.hpp>
 #pragma warning( pop )
 
-#include <iostream>
 #include <future>
 
 #include "utility/IoService.h"
+#include "utility/Logger.h"
 
 using namespace torrent;
 namespace bai = boost::asio::ip;
@@ -33,13 +33,13 @@ namespace
 
 bool    PeerSocket::connect()
 {
-    std::cout << "Trying " << endpoint_ << "...\n";
+    LOG_INFO << "Trying " << endpoint_ << "...";
 
     socket_.open( bai::tcp::v4() ); // ???
     if ( !::ensure_valid_future( socket_.async_connect( endpoint_, boost::asio::use_future ), timeout_ ) )
         return false;
 
-    std::cout << "******* Connected to " << endpoint_ << "\n";
+    LOG_INFO << "******* Connected to " << endpoint_;
 
     receiveBuffer_.clear();
     sendBuffer_.clear();
@@ -48,11 +48,11 @@ bool    PeerSocket::connect()
 
 bool    PeerSocket::send()
 {
-    std::cout << "=== SENDING " << sendBuffer_.size() << " bytes " << std::endl;
+    LOG_DEBUG << "=== SENDING " << sendBuffer_.size() << " bytes ";
     if ( !::ensure_valid_future( boost::asio::async_write( socket_, boost::asio::buffer( sendBuffer_.getDataForReading(), sendBuffer_.size() ), boost::asio::use_future ), timeout_ ) )
         return false;
 
-    std::cout << "=== SENDING OK" << std::endl;
+    LOG_DEBUG << "=== SENDING OK";
 
     sendBuffer_.clear();
     return true;
@@ -60,7 +60,7 @@ bool    PeerSocket::send()
 
 bool    PeerSocket::receive()
 {
-    std::cout << "-> READ" << std::endl;
+    LOG_DEBUG << "-> READ";
 
     auto receiveFuture = socket_.async_read_some( boost::asio::buffer( receiveBuffer_.getDataForWritingTESTTTTTTTTTTTTTTTTTTTTTTTT(), receiveBuffer_.capacity() ), boost::asio::use_future );
     if ( !::ensure_valid_future( receiveFuture, timeout_ ) )
@@ -70,11 +70,11 @@ bool    PeerSocket::receive()
     {
         auto s = receiveFuture.get();
         receiveBuffer_.updateDataWritten( s );
-        std::cout << "%%%%%%%%%%%%%%%%%%%%%%%% READ " << s << " bytes" << std::endl;
+        LOG_DEBUG << "%%%%%%%%%%%%%%%%%%%%%%%% READ " << s << " bytes";
     }
     catch ( const boost::system::system_error& error )
     {
-        std::cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%% CRASH (async_read_some): " << error.what() << std::endl;
+        LOG_DEBUG << "%%%%%%%%%%%%%%%%%%%%%%%%%%%% CRASH (async_read_some): " << error.what();
         return false;
     }
     return true;
@@ -88,30 +88,24 @@ bool    PeerSocket::waitReceiveUntruncatedMessage()
 {
     for ( ;; )
     {
+        if ( receiveBuffer_.size() >= sizeof( int ) )
+        {
+            auto length = static_cast< int >( receiveBuffer_ );
+            if ( length < 0 )
+            {
+                LOG_ERROR << "invalid message length: " << length;
+                return false;
+            }
+
+            auto underlyingMessageSize = receiveBuffer_.size();
+            receiveBuffer_.rewindReadIndex( sizeof( int ) ); // reset index as we will we need the length to handle the messages
+            if ( length <= underlyingMessageSize )
+                return true;
+
+            LOG_INFO << "Message is truncated (waiting for next packet): " << underlyingMessageSize << " / " << length;
+        }
+
         if ( !receive() )
             return false;
-
-        if ( receiveBuffer_.size() < sizeof( int ) )
-        {
-            std::cout << "Message less than a int" << std::endl;
-            continue;
-        }
-
-        auto length = static_cast< int >( receiveBuffer_ );
-        if ( length < 0 )
-        {
-            std::cout << "invalid message length: " << length << std::endl;
-            return false;
-        }
-
-        if ( length > receiveBuffer_.size() )
-        {
-            std::cout << "Message is truncated (waiting for next packet): " << receiveBuffer_.size() << " / " << length << std::endl;
-            receiveBuffer_.rewindReadIndex( sizeof( int ) );
-            continue;
-        }
-
-        receiveBuffer_.rewindReadIndex( sizeof( int ) ); // reset index as we will we need the length to handle the messages
-        return true;
     }
 }

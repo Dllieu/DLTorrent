@@ -20,11 +20,12 @@
 
 #include "utility/IoService.h"
 #include "utility/DebugTools.h"
+#include "utility/Logger.h"
 
 using namespace torrent;
 using namespace boost::asio::ip;
 
-BOOST_AUTO_TEST_SUITE( TrackerTestSuite )
+BOOST_AUTO_TEST_SUITE( PeerTestSuite )
 
 namespace
 {
@@ -45,6 +46,8 @@ namespace
 
 BOOST_AUTO_TEST_CASE( TrackerTest )
 {
+    utility::Logger::init();
+
     std::atomic< bool > mustStop( false );
     std::thread thread( [ &mustStop ]
     {
@@ -64,4 +67,4 @@ BOOST_AUTO_TEST_CASE( TrackerTest )
     thread.join();
 }
 
-BOOST_AUTO_TEST_SUITE_END() // ! TrackerTestSuite
+BOOST_AUTO_TEST_SUITE_END() // ! PeerTestSuite

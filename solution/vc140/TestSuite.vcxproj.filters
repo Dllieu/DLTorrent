@@ -20,6 +20,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\testsuite\DecoderTestSuite.cpp" />
     <ClCompile Include="..\..\source\testsuite\EncoderTestSuite.cpp" />
-    <ClCompile Include="..\..\source\testsuite\TrackerTestSuite.cpp" />
+    <ClCompile Include="..\..\source\testsuite\PeerTestSuite.cpp" />
+    <ClCompile Include="..\..\source\testsuite\LoggerTestSuite.cpp">
+      <Filter>UtilityTests</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
